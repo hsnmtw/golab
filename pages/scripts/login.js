@@ -8,7 +8,8 @@ function submitLogin(){
     }
     POST('/user/login/submit', model, r => {
         console.log(r)
-        alert(JSON.stringify(r))
+        //alert(JSON.stringify(r))
+        if(r.Status === "success") top.location.href = "/data"
     })
 }
 
