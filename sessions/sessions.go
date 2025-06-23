@@ -1,3 +1,3 @@
 package sessions
 
-Sessions := make(map[string]string)
+var Sessions map[string]string = make(map[string]string)

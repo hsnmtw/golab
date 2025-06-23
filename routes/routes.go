@@ -2,4 +2,4 @@ package routes
 
 import "net/http"
 
-Routes := make(map[string]func(w http.ResponseWriter, r *http.Request))
+var Routes map[string]func(w http.ResponseWriter,r *http.Request) = make(map[string]func(w http.ResponseWriter, r *http.Request))
