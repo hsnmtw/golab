@@ -119,7 +119,7 @@ func main() {
 	//load sessions from os
 	var s map[string]string = map[string]string{}
 	err := storage.Query("sessions", &s)
-	if err != nil {
+	if err == nil {
 		sessions.Sessions = s
 	}
 	users.RegistersRoutes(routes.Routes)
