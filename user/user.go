@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hsnmtw/sessions"
+	"hsnmtw/storage"
 	"hsnmtw/utilities"
 	"io"
 	"net/http"
@@ -34,21 +35,27 @@ type UserLogin struct {
 }
 
 // [GET] html
-func login(w http.ResponseWriter, r *http.Request) {
+func logout(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
+	destroySession(w,r)
+	return []byte(`<meta http-equiv="refresh" content="0; url=/">`),"",nil
+}
+
+func login(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
 	//	fmt.Fprintf(w, "Path is %s", r.URL.Path)
 
 	buffer, err := os.ReadFile("./pages/user/login.html")
 
 	if err != nil {
 		w.Write([]byte(err.Error()))
-		return
+		return []byte{},"error",err
 	}
 
-	w.Write(buffer)
+	// w.Write(buffer)
+	return buffer,"Login",nil
 }
 
 // [POST] json
-func submitLogin(w http.ResponseWriter, r *http.Request) {
+func submitLogin(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
 	// fmt.Fprintf(w, "Path is %s", r.URL.Path)
 	// u := r.FormValue("Username")
 	// p := r.FormValue("Password")
@@ -68,15 +75,16 @@ func submitLogin(w http.ResponseWriter, r *http.Request) {
 		createSession(w,  ul.Username)		
 	}
 	encoded,_ := json.Marshal(response)
-	w.Write(encoded)
+	// w.Write(encoded)
+	return encoded,":json:",nil
 }
 
 
 
 
-func RegistersRoutes(routes map[string]func(w http.ResponseWriter, r *http.Request)) {
+func RegistersRoutes(routes map[string]func(w http.ResponseWriter, r *http.Request) ([]byte,string,error)) {
 	routes["/user/login"] = login
-	routes["/user/logout"] = destroySession
+	routes["/user/logout"] = logout
 	routes["/user/login/submit"] = submitLogin
 }
 
@@ -97,6 +105,7 @@ func createSession(w http.ResponseWriter, username string) {
 		Quoted:      false,
 		RawExpires:  time.Now().Add(3 * time.Hour).GoString(),
 	})
+	storage.Save("sessions", sessions.Sessions)
 }
 
 func destroySession(w http.ResponseWriter, r *http.Request) {
@@ -110,4 +119,5 @@ func destroySession(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(-1),
 	})
 	delete(sessions.Sessions, lsessions[0].Value)
+	storage.Save("sessions", sessions.Sessions)
 }
