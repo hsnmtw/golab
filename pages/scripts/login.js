@@ -1,4 +1,4 @@
-import { getValue, POST } from "./main.js";
+import { getValue, http } from "./main.js";
 
 function submitLogin(){
 
@@ -6,7 +6,8 @@ function submitLogin(){
         Username: getValue('[name="Username"]'),
         Password: getValue('[name="Password"]')
     }
-    POST('/user/login/submit', model, r => {
+    
+    http.post('/user/login/submit', model, r => {
         console.log(r)
         //alert(JSON.stringify(r))
         if(r.Status === "success") top.location.href = "/data"

@@ -5,16 +5,15 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 
 	"hsnmtw/data"
+	"hsnmtw/fs"
 	"hsnmtw/routes"
 	"hsnmtw/sessions"
 	"hsnmtw/storage"
 
-	// "hsnmtw/sessions"
 	users "hsnmtw/user"
 )
 
@@ -23,6 +22,7 @@ type Layout struct {
 	Title  any
 	Main   any
 	Footer any
+	User   any
 }
 
 var exmpted = []string{
@@ -37,34 +37,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var h, ok = routes.Routes[r.URL.Path]
 	sessionId := ""
 	cookies := r.CookiesNamed("SESSION_ID")
-	
+	isPartial := r.URL.Query().Get("isPartial") == "true"
+
 	if len(cookies) > 0 {
 		sessionId = cookies[0].Value
 	}
 
-	var f string = "not found"
-	if ok {
-		f = "found"
-	}
-
-	fmt.Println("p='"+r.URL.Path+"' ok='"+f+"'")
-
 	if !ok {
 		fpath := "." + r.URL.Path
-		_, err := os.Stat(fpath)
-		if err == nil {
-			buffer, err := os.ReadFile(fpath)
-			if err == nil {
-				parts := strings.Split(fpath, ".")
-				if len(parts) > 0 && parts[len(parts)-1] == "js" {
-					w.Header().Set("Content-Type", "text/javascript")
-				}
-				if len(parts) > 0 && parts[len(parts)-1] == "css" {
-					w.Header().Set("Content-Type", "text/css")
-				}
-				w.Write(buffer)
-				return
+		if fs.Exists(fpath) {
+			buffer := fs.Read(fpath)
+			parts := strings.Split(fpath, ".")
+			if len(parts) > 0 && parts[len(parts)-1] == "js" {
+				w.Header().Set("Content-Type", "text/javascript")
 			}
+			if len(parts) > 0 && parts[len(parts)-1] == "css" {
+				w.Header().Set("Content-Type", "text/css")
+			}
+			w.Write(buffer)
+			return
 		}
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "404 Page not found : %v", r.URL.Path)
@@ -83,37 +74,38 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
-	
-	if title == ":json:" {
+
+	if title == ":json:" || isPartial {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(buffer)
 		return
 	}
-	
+
 	tmpl, err := template.ParseFiles("./pages/html/layout.html")
-	
+
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
-	
+
 	var header any = ""
-	
+
 	if u != "" {
 		header = template.HTML(`<a href="/user/logout">Logout</a>`)
 	}
-	
+
 	layout := Layout{
 		Title:  title,
 		Header: header,
 		Main:   template.HTML(buffer),
 		Footer: err,
+		User:   u,
 	}
 	tmpl.Execute(w, layout)
 }
 
-func home(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
-	b,e := os.ReadFile("./pages/html/home.html")
-	return b,"Home",e
+func home(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
+	b := fs.Read("./pages/html/home.html")
+	return b, "Home", nil
 }
 
 func main() {

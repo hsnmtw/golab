@@ -12,16 +12,6 @@ import (
 	"time"
 )
 
-// const (
-// 	WEEKDAY_SUNDAY = iota
-// 	WEEKDAY_MONDAY
-// 	WEEKDAY_TUESDAY
-// 	WEEKDAY_WEDENSDAY
-// 	WEEKDAY_THURSDAY
-// 	WEEKDAY_FRIDAY
-// 	WEEKDAY_SATURDAY
-// )
-
 const SESSION_ID = "SESSION_ID"
 
 type LoginResponse struct {
@@ -35,27 +25,29 @@ type UserLogin struct {
 }
 
 // [GET] html
-func logout(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
-	destroySession(w,r)
-	return []byte(`<meta http-equiv="refresh" content="0; url=/">`),"",nil
+func logout(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
+	destroySession(w, r)
+	w.Header().Set("Location", "/")
+	w.WriteHeader(http.StatusTemporaryRedirect)
+	return []byte{}, ":json:", nil //[]byte(`<meta http-equiv="refresh" content="0; url=/">`),"",nil
 }
 
-func login(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
+func login(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
 	//	fmt.Fprintf(w, "Path is %s", r.URL.Path)
 
 	buffer, err := os.ReadFile("./pages/user/login.html")
 
 	if err != nil {
 		w.Write([]byte(err.Error()))
-		return []byte{},"error",err
+		return []byte{}, "error", err
 	}
 
 	// w.Write(buffer)
-	return buffer,"Login",nil
+	return buffer, "Login", nil
 }
 
 // [POST] json
-func submitLogin(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
+func submitLogin(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
 	// fmt.Fprintf(w, "Path is %s", r.URL.Path)
 	// u := r.FormValue("Username")
 	// p := r.FormValue("Password")
@@ -66,28 +58,24 @@ func submitLogin(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
 	fmt.Printf("Username : %s\n", ul.Username)
 	fmt.Printf("Password : %s\n", ul.Password)
 	response := LoginResponse{
-		Status: "failure",
+		Status:  "failure",
 		Message: "Login failed",
 	}
 	if ul.Username == "admin" && ul.Password == "123" {
 		response.Status = "success"
 		response.Message = "OK"
-		createSession(w,  ul.Username)		
+		createSession(w, ul.Username)
 	}
-	encoded,_ := json.Marshal(response)
+	encoded, _ := json.Marshal(response)
 	// w.Write(encoded)
-	return encoded,":json:",nil
+	return encoded, ":json:", nil
 }
 
-
-
-
-func RegistersRoutes(routes map[string]func(w http.ResponseWriter, r *http.Request) ([]byte,string,error)) {
+func RegistersRoutes(routes map[string]func(w http.ResponseWriter, r *http.Request) ([]byte, string, error)) {
 	routes["/user/login"] = login
 	routes["/user/logout"] = logout
 	routes["/user/login/submit"] = submitLogin
 }
-
 
 func createSession(w http.ResponseWriter, username string) {
 	guid, _ := utilities.Guid()

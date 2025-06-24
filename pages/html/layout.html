@@ -6,17 +6,47 @@
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/pages/styles/main.css">
 </head>
-<body>
-    <header>
-        {{.Header}}
-    </header>
-    <hr>
-    <main>
-        {{.Main}}
-    </main>
-    <hr>
-    <footer>
-        {{.Footer}}
-    </footer>
+<body class="grid">
+    <container class="flex">
+        <side class="grid">
+            <nav class="flex f-col spaced">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/data">Data</a></li>
+                </ul>
+                <ul>
+                    <li><a href="javascript:void(0)" data-partial>Partial</a></li>
+                </ul>
+            </nav>
+        </side>
+        <content class="f-grow grid-2">
+            <div>
+                <div class="flex spaced v-center">
+                    <h1>Go Lab</h1>
+                    <span>{{.User}}</span>
+                </div>
+                <header>
+                    {{.Header}}
+                </header>
+                <hr>
+                <main>
+                    {{.Main}}
+                </main>
+                <hr>
+                <footer>
+                    {{.Footer}}
+                </footer>
+            </div>
+            <div class="partial" style="max-width: 25vw;min-width: 25vw;">
+                partial
+            </div>
+        </content>
+    </container>
+    <script defer type="module">
+        import {http} from '/pages/scripts/main.js'
+        document.querySelector('[data-partial]').addEventListener("click",_=>
+            http.get('/pages/html/partial.html',{},x=>document.querySelector('.partial').innerHTML=x)
+        )
+    </script>
 </body>
 </html>

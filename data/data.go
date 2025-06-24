@@ -29,24 +29,7 @@ func dataView(w http.ResponseWriter, r *http.Request) ([]byte,string,error) {
 	return buffer.Bytes(),"Data",err
 }
 
-const MY_CONST = "SOME value"
-
 func RegistersRoutes(routes map[string]func(w http.ResponseWriter, r *http.Request) ([]byte,string,error)) {
-	/*
-		<table>
-			@foreach(){
-			}
-		</table>
-	*/
-
-	var SomeConst = "some value"
-
-
-	mymap := make(map[int]string)
-	mymap[0] = SomeConst
-
-	SomeConst = "yyu"
-
-
+	
 	routes["/data"] = dataView
 }

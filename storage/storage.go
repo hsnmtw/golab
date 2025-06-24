@@ -2,23 +2,18 @@ package storage
 
 import (
 	"encoding/json"
-	"os"
+	"hsnmtw/fs"
 )
 
 func Query(name string, data any) error {
-	buffer, err := os.ReadFile("./json/"+name+".json")
-	
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(buffer, data)
-	return err
+	buffer := fs.Read("./json/" + name + ".json")
+	return json.Unmarshal(buffer, data)
 }
 
 func Save(name string, data any) error {
-	buffer,err := json.Marshal(data)
+	buffer, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile("./json/"+name+".json", buffer, 0642)
+	return fs.Write("./json/"+name+".json", buffer)
 }
