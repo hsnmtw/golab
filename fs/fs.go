@@ -7,6 +7,10 @@ func Exists(path string) bool {
 	return err == nil
 }
 
+func ReadHTML(path string) []byte {
+	return Read(path)
+}
+
 func Read(path string) []byte {
 	buffer, err := os.ReadFile(path)
 	if err != nil {

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -13,6 +16,7 @@ import (
 	"hsnmtw/routes"
 	"hsnmtw/sessions"
 	"hsnmtw/storage"
+	"hsnmtw/utilities"
 
 	users "hsnmtw/user"
 )
@@ -100,11 +104,37 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Footer: err,
 		User:   u,
 	}
-	tmpl.Execute(w, layout)
+
+	b := bytes.Buffer{}
+	var myWriter = io.MultiWriter(&b)
+	tmpl.Execute(myWriter, layout)
+
+	//
+	var html = b.String()
+	patten := `(<Comp1[^\/]+\/>)`
+	rx := regexp.MustCompile(patten)
+	m := rx.FindAllStringSubmatch(html, 100)
+
+	// pvs := strings.ReplaceAll(strings.Join(m, ","), "=", ":")
+
+	// //k := pvs
+	// patten = `(\w+)\s*=\s*"([^"]+)"`
+	// rx = regexp.MustCompile(patten)
+	// z := rx.FindAllStringSubmatch(pvs, 50)
+	// d, _ := json.Marshal(utilities.SetOf(utilities.Flatten(m)))
+
+	s := utilities.SetOf(utilities.Flatten(m))
+	x := strings.Join(utilities.Project(s, utilities.XmlToJson), "|")
+
+	html = strings.ReplaceAll(html, "<Comp1", "<pre>XML: "+template.HTMLEscapeString(s[0])+" \nJSON: "+x+"</pre><Comp1")
+	//
+
+	// w.Write(b.Bytes())
+	fmt.Fprint(w, html)
 }
 
 func home(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
-	b := fs.Read("./pages/html/home.html")
+	b := fs.ReadHTML("./pages/html/home.html")
 	return b, "Home", nil
 }
 

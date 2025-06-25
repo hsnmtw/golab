@@ -3,12 +3,12 @@ package users
 import (
 	"encoding/json"
 	"fmt"
+	"hsnmtw/fs"
 	"hsnmtw/sessions"
 	"hsnmtw/storage"
 	"hsnmtw/utilities"
 	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -35,12 +35,12 @@ func logout(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
 func login(w http.ResponseWriter, r *http.Request) ([]byte, string, error) {
 	//	fmt.Fprintf(w, "Path is %s", r.URL.Path)
 
-	buffer, err := os.ReadFile("./pages/user/login.html")
+	buffer := fs.ReadHTML("./pages/user/login.html")
 
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return []byte{}, "error", err
-	}
+	// if err != nil {
+	// 	w.Write([]byte(err.Error()))
+	// 	return []byte{}, "error", err
+	// }
 
 	// w.Write(buffer)
 	return buffer, "Login", nil
