@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go is not fun !</title>
+    <link rel="stylesheet" href="/assets/css/main/style.css">
+    <script src="/assets/js/main/http.js"></script>
+</head>
+<body class="grid-n gap-0" style="grid-template-columns: 200px 1fr;">
+    <nav class="nutral p-2 flex-v" style="gap:0.3rem">
+        [LOGO]<br>
+        [COMPANY NAME]<br>
+        <hr>
+        [MENU]
+            <Login />
+
+    </nav>
+    <main class="p-2 grid-n" style="grid-template-columns: 1fr 300px;">
+        <div class="flex-v" style="gap: 0.3rem" data-main>
+            <h1>Is Go Fun ?</h1>
+            <hr>
+            <div class="message success">Success</div>
+            <div class="message warning">Warning</div>
+            <div class="message error">Error</div>
+            <div>
+                <button>test</button>
+            </div>
+            <h2>بالعربي</h2>
+            <p>
+                لوريم إيبسوم(Lorem Ipsum) هو ببساطة نص شكلي (بمعنى أن الغاية هي الشكل وليس المحتوى) ويُستخدم في صناعات المطابع ودور النشر. كان لوريم إيبسوم ولايزال المعيار للنص الشكلي منذ القرن الخامس عشر عندما قامت مطبعة مجهولة برص مجموعة من الأحرف بشكل عشوائي أخذتها من نص، لتكوّن كتيّب بمثابة دليل أو مرجع شكلي لهذه الأحرف. خمسة قرون من الزمن لم تقضي على هذا النص، بل انه حتى صار مستخدماً وبشكله الأصلي في الطباعة والتنضيد الإلكتروني. انتشر بشكل كبير في ستينيّات هذا القرن مع إصدار رقائق "ليتراسيت" (Letraset) البلاستيكية تحوي مقاطع من هذا النص، وعاد لينتشر مرة أخرى مؤخراَ مع ظهور برامج النشر الإلكتروني مثل "ألدوس بايج مايكر" (Aldus PageMaker) والتي حوت أيضاً على نسخ من نص لوريم إيبسوم. 
+            </p>
+            <Login />
+
+        </div>
+        <div>
+            
+            <Login />
+
+        </div>
+    </main>
+
+    <script>
+        import('/assets/js/user/login.js').then(login => {
+
+            document.querySelectorAll('Login').forEach(el => {
+                const componenet = login.render(el)
+                componenet.addEventListener(e=>{
+                    document.querySelector('[data-main]').innerHTML = `
+                        Username : ${componenet.getUsername()}<br>
+                        Password : ${componenet.getPassword()}<br>
+                    `
+                })
+            })
+        })
+    </script>
+</body>
+</html>

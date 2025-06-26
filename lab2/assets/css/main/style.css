@@ -1,0 +1,105 @@
+@font-face {
+  font-family: 'AgaveNerd';
+  src: url(/assets/fonts/AgaveNerd.ttf);
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Beiruti';
+  src: url(/assets/fonts/Beiruti.ttf);
+  font-weight: 400;
+  font-style: normal;
+}
+
+:root {
+    --nutral    : whitesmoke;
+    --negative  : red;
+    --positive  : green;
+    --primary   : blue;
+    --accent-1  : orange;
+    --accent-2  : yellow;
+    --secondary : black;
+    --dark-grey : #333333;
+    --success   : #cff5cf;
+    --error     : rgb(254, 227, 231);
+    --warning   : #FFE4B5;
+    --font-main : 'AgaveNerd','Beiruti',Verdana, Tahoma, Arial;
+}
+
+*,*::after,*::before{
+    margin: 0;
+    box-sizing: border-box;
+    line-height: 1.1rem;
+    font-family: var(--font-main);
+    /* font-size: 0.9rem; */
+}
+
+html,body {
+    min-height: 100vh;
+}
+
+h1,h2,h3,h4,h5,h6 { margin-block: 0.25em; }
+
+.grid-n { display: grid; gap: 1em; grid-template-columns: repeat(var(--columns),1fr); }
+.flex-h { display: flex; gap: 1em; flex: 1; }
+.flex-v { display: flex; gap: 1em; flex-direction: column; }
+.flex-g { flex-grow: 1; }
+.spaced { justify-content: space-between; }
+.gap-0  { gap: 0 }
+
+.bold  { font-weight: bold; }
+.uline { text-decoration: underline; }
+
+.b-1 { border: 1px solid var(--border-color); }
+
+.p-1 { padding:  3px; }
+.p-2 { padding:  6px; }
+.p-3 { padding:  9px; }
+.p-4 { padding: 12px; }
+
+.m-1 { margin:  3px; }
+.m-2 { margin:  6px; }
+.m-3 { margin:  9px; }
+.m-4 { margin: 12px; }
+
+button {
+    padding-inline: 2em;
+    padding-block: 4px;
+    border: 1px solid #cecece;
+    border-radius: 0.3rem;
+    background-color: var(--dark-grey);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.message {
+    border-radius: 0.23rem;
+    padding: 0.25rem 0.55rem 0.15rem 0.55rem;
+    border-width: 1px;
+    border-style: solid; 
+    font-size: smaller;
+}
+
+.message.success { color: darkgreen; border-color: darkgreen; background-color: var(--success); }
+.message.warning { color: rgb(177, 117, 5); border-color: orange; background-color: var(--warning); }
+.message.error   { color: red; border-color: red; background-color: var(--error); }
+
+button:hover { opacity: 0.65; }
+
+.primary   { background-color: var(--primary);  }
+.secondary { background-color: var(--secondary);}
+.negative  { background-color: var(--negative); }
+.positive  { background-color: var(--positive); }
+.nutral    { background-color: var(--nutral);   }
+
+.v-center { align-items: center; }
+.v-start  { align-items: start;  }
+.v-end    { align-items: end;    }
+.h-center { justify-items: center; }
+.h-start  { justify-items: start; }
+.h-end    { justify-items: end; }
