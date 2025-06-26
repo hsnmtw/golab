@@ -126,7 +126,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	s := utilities.SetOf(utilities.Flatten(m))
 	x := strings.Join(utilities.Project(s, utilities.XmlToJson), "|")
 
-	html = strings.ReplaceAll(html, "<Comp1", "<pre>XML: "+template.HTMLEscapeString(s[0])+" \nJSON: "+x+"</pre><Comp1")
+	html = strings.ReplaceAll(html, s[0], "<pre>XML: "+template.HTMLEscapeString(s[0])+" \nJSON: "+x+"</pre>")
 	//
 
 	// w.Write(b.Bytes())
