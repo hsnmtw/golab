@@ -1,2 +1,6 @@
 * Go LAB
 learning golang step-by-step (for web development)
+
+1. Basic Web Server
+2. Component in Javascript
+3. Connection to database with tiny ORM
