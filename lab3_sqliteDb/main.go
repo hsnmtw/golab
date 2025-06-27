@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	// _ "github.com/mattn/go-sqlite3"
+	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
 
@@ -86,5 +87,7 @@ func ORM() {
 }
 
 func main() {
+	u := uuid.New()
+	fmt.Printf("\n\n[uuid=%v]\n\n",u)
 	ORM()
 }
