@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 )
 
@@ -16,32 +17,63 @@ const (
 type IDbConnection interface {
 	Open(driver string, sourceName string) error
 	Close() error
-	Query(sql string, parameters []any) ([]map[string]any, error)
-	Execute(sql string, parameters []any) (int64, error)
+	Query(sql string, parameters ...any) ([]map[string]any, error)
+	QueryUnmarshalled(target any, sql string, parameters ...any) error
+	Execute(sql string, parameters ...any) (int64, error)
+	GetDriver() string
+	GetSource() string
+	GetState() string
 }
 
 type DbConnection struct {
 	db     *sql.DB
-	Source string
-	State  int
+	driver string
+	source string
+	state  int
+}
+
+func (dbConnection *DbConnection) GetDriver() string {
+	return dbConnection.driver
+}
+
+func (dbConnection *DbConnection) GetSource() string {
+	return dbConnection.source
+}
+
+func (dbConnection *DbConnection) GetState() string {
+	switch dbConnection.state {
+	case OPEN:
+		return "OPEN"
+	case CLOSED:
+		return "CLOSED"
+	case ERROR:
+		return "ERROR"
+	case CONNECTING:
+		return "CONNECTING"
+	case BUSY:
+		return "BUSY"
+	default:
+		return "UNKNOWN"
+	}
 }
 
 func (dbConnection *DbConnection) Open(driver string, sourceName string) error {
-	dbConnection.State = CONNECTING
-	dbConnection.Source = sourceName
+	dbConnection.state = CONNECTING
+	dbConnection.driver = driver
+	dbConnection.source = sourceName
 	db, e := sql.Open(driver, sourceName)
 	if e != nil {
-		dbConnection.State = ERROR
+		dbConnection.state = ERROR
 		return e
 	}
-	dbConnection.State = OPEN
+	dbConnection.state = OPEN
 	dbConnection.db = db
 	return nil
 }
 
 func (dbConnection *DbConnection) Close() error {
 
-	if dbConnection.State == CLOSED {
+	if dbConnection.state == CLOSED {
 		return nil
 	}
 
@@ -49,20 +81,20 @@ func (dbConnection *DbConnection) Close() error {
 		return e
 	}
 
-	dbConnection.State = CLOSED
+	dbConnection.state = CLOSED
 
 	return nil
 }
 
-func (dbConnection *DbConnection) Query(sql string, parameters []any) ([]map[string]any, error) {
+func (dbConnection *DbConnection) Query(sql string, parameters ...any) ([]map[string]any, error) {
 
-	if dbConnection.State != OPEN {
-		return nil, errors.New("ERROR: db connection is not OPEN")
+	if dbConnection.state != OPEN {
+		return nil, errors.New("ERROR: db connection state is not OPEN, ::= " + dbConnection.GetState())
 	}
 
-	dbConnection.State = BUSY
+	dbConnection.state = BUSY
 	defer func() {
-		dbConnection.State = OPEN
+		dbConnection.state = OPEN
 	}()
 
 	rows, e := dbConnection.db.Query(sql, parameters...)
@@ -99,27 +131,49 @@ func (dbConnection *DbConnection) Query(sql string, parameters []any) ([]map[str
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	dbConnection.State = OPEN
+	dbConnection.state = OPEN
 	return data, nil
 }
 
-func (dbConnection *DbConnection) Exec(sql string, parameters []any) (int64, error) {
+func (dbConnection *DbConnection) QueryUnmarshalled(target any, sql string, parameters ...any) error{
+	
+	data,e := dbConnection.Query(sql,parameters...)
+	
+	if e != nil {
+		return e
+	}
 
-	if dbConnection.State != OPEN {
-		return -1, errors.New("ERROR: db connection is not OPEN")
+	b,e := json.Marshal(data)
+	
+	if e != nil {
+		return e
+	}
+
+	if e = json.Unmarshal(b,target); e != nil {
+		return e
+	}
+
+	return nil
+}
+
+
+func (dbConnection *DbConnection) Exec(sql string, parameters ...any) (int64, error) {
+
+	if dbConnection.state != OPEN {
+		return -1, errors.New("ERROR: db connection state is not OPEN, ::= " + dbConnection.GetState())
 	}
 
 	defer func() {
-		dbConnection.State = OPEN
+		dbConnection.state = OPEN
 	}()
 
-	dbConnection.State = BUSY
+	dbConnection.state = BUSY
 	result, e := dbConnection.db.Exec(sql, parameters...)
 
 	if e != nil {
 		return -2, e
 	}
 
-	dbConnection.State = OPEN
+	dbConnection.state = OPEN
 	return result.RowsAffected()
 }
