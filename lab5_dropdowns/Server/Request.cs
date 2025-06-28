@@ -1,11 +1,12 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
-public enum HttpRequestMethod {_,GET, PUT, POST, PATCH, DELETE, HEAD, OPTIONS, TRACE, CONNECT}
+using System.Text;
 
 namespace web.Http
 {
+    public enum HttpRequestMethod {_,GET, PUT, POST, PATCH, DELETE, HEAD, OPTIONS, TRACE, CONNECT}
+    
     public class StringKeyValue
     {
         public StringKeyValue(string text, char sep = ':')
@@ -32,8 +33,8 @@ namespace web.Http
         private string _path = "";
         private string _body = "";
         private readonly Dictionary<string,string> _query = new Dictionary<string,string>();
-        private readonly Dictionary<string,string> _cookies = new Dictionary<string,string>();
         private readonly Dictionary<string,string> _form = new Dictionary<string,string>();
+        private readonly Dictionary<string,string> _cookies = new Dictionary<string,string>();
         private readonly Dictionary<string,string> _headers = new Dictionary<string,string>();
 
         public HttpRequest(string requestText)
