@@ -15,9 +15,40 @@ namespace web.Http
         {
             Handlers = new Dictionary<string, Action<HttpRequest,HttpResponse>>();
             Handlers["GET:/favicon.ico"] = (req,res) => {
-                Console.WriteLine("no favicon.... just return empty response");
+                LogWarning("no favicon.... just return empty response");
                 res.Write(new byte[]{});
             };
+        }
+
+        public static void LogInfo(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            System.Console.Write("\n{0:d'/'M hh':'mm':'ss}",DateTime.Now);
+            Console.ForegroundColor = ConsoleColor.Green;
+            System.Console.Write(" [inf] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            System.Console.Write(message);
+            System.Console.Out.Flush();
+        }
+        public static void LogWarning(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            System.Console.Write("\n{0:d'/'M hh':'mm':'ss}",DateTime.Now);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            System.Console.Write(" [wrn] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            System.Console.Write(message);
+            System.Console.Out.Flush();
+        }
+        public static void LogError(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            System.Console.Error.Write("\n{0:d'/'M hh':'mm':'ss}",DateTime.Now);
+            Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.Error.Write(" [err] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            System.Console.Error.Write(message);
+            System.Console.Error.Flush();
         }
 
         private bool IsStaticFile(HttpRequest req, HttpResponse response)
@@ -40,21 +71,25 @@ namespace web.Http
             return false;
         }
 
-        public void Run()
+        public void Run(int port = 80)
         {
+            if(port==0) port=80;
             Start:
             TcpListener server = null;
             try
             {
-                System.Console.WriteLine("Basic web server");
-                server = new TcpListener(IPAddress.Parse("127.0.0.1"), 80);
+                IPAddress ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(x=> x.AddressFamily.ToString()=="InterNetwork");
+                // System.Console.WriteLine(string.Join("\n|\n",Dns.GetHostEntry(Dns.GetHostName()).AddressList.Select(x=>x.ToString()+" :::: "+x.AddressFamily)));
+                IPEndPoint ipLocalEndPoint = new IPEndPoint(IPAddress.Any, port);
+                LogInfo(string.Format("Basic web server is running on url http://{0}:{1}/",ipAddress,ipLocalEndPoint.Port));
+                server = new TcpListener(ipLocalEndPoint);
                 server.Start();
                 while(true)
                 {
                     // Console.Write("Waiting for a connection... ");
                     using (TcpClient client = server.AcceptTcpClient())
                     {
-                        // Console.WriteLine("Connected!");
+                        // Log("Connected!");
                         using (NetworkStream stream = client.GetStream())
                         {
                             byte[] buffer = new byte[1024];
@@ -63,11 +98,15 @@ namespace web.Http
                             var req = new HttpRequest(request);
                             var res = new HttpResponse(stream);                            
                             if(req.Path=="/") req.Path = "/assets/html/home.html";
-                            System.Console.WriteLine("{0} [inf] {1}:{2}",DateTime.Now,req.Method,req.Path);
+                            string route = string.Format("{0}:{1}",req.Method,req.Path);
                             if(!(IsStaticFile(req, res) || IsHandled(req, res)))
                             {
                                 res.SetHeader("status","404");
-                                res.Write("404 Page Not Found");
+                                // res.Write("404 Page Not Found");
+                                res.WriteFile("./assets/html/errors/404.html");                                
+                                LogWarning("Page not found: 404 - " + route);
+                            }else{
+                                LogInfo(route);
                             }
                             stream.Flush();
                         }
@@ -76,14 +115,9 @@ namespace web.Http
             }
             catch(Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                System.Console.WriteLine("----------------------------------------------------------------------");
-                Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine(ex);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                System.Console.WriteLine("----------------------------------------------------------------------");
-                System.Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.White;
+                LogError("----------------------------------------------------------------------");
+                LogError(ex.ToString());
+                LogError("----------------------------------------------------------------------");
             }
             finally
             {
