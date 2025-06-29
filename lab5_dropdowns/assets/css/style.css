@@ -102,15 +102,27 @@ main {
     transition: all ease-in 300ms;
 }
 
-.modified-drop-down button {
+.modified-drop-down button,[data-option-index] {
+    cursor: pointer;
     text-align: left;
 }
 
-.modified-drop-down .drop-down {
+/* .modified-drop-down:not(:has(button:focus,[data-list]:focus,.drop-down:focus,[data-option-index]:focus)) [data-list] { */
+.modified-drop-down:not(:focus-within) [data-list]{
     visibility: hidden;
     opacity: 0;
+    display: none;
+    position: absolute;
+    height: 0;
+    width: 0;
+    top: -122pt;
+    left: -122pt;
+
 }
-.modified-drop-down:has(button:focus,.drop-down:focus) .drop-down {
+
+.modified-drop-down:has(button:focus,[data-list]:focus,.dropdown:focus,[data-option-index]:focus) [data-list] {
+    height: unset;
+    width: unset;
     opacity: unset;
     visibility: unset;
     z-index: 99;
@@ -119,7 +131,10 @@ main {
     top: unset;
     width: unset;
     height: unset;
+
+    /* transition: all ease-in-out 500ms; */
 }
+
 .grid { display: grid; }
 .abs{
     position: absolute;

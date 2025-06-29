@@ -29,7 +29,7 @@ const template = `
             </span>
             <span class="rel"><b class="abs fnt-diff"></b></span>
         </button>
-        <div class="grid">
+        <div class="grid flex-g" data-list tabIndex="1">
             <div class="rb p-3 drop-down gap-1 flex-v" style="background-color:cornsilk">
                 ${Array.from(select2.options).map(x=>x.innerText).map((x,i)=>`
                     <span data-option-index="${i}" class="p-3 hv flex-h gap-1 a-c"> 
@@ -40,12 +40,14 @@ const template = `
             </div>
         </div>
     </div>
+    <div data-focus-out tabIndex="2"></div>
 `
 select2.classList.add('hidden');
 
 const div = document.createElement('div')
 div.innerHTML = template
 const text = div.querySelector('.selected-item')
+const focusOut = div.querySelector('[data-focus-out]')
 select2.parentNode.insertBefore(div, select2)
 div.querySelectorAll('[data-option-index]').forEach(item => {
     item.addEventListener("click", _ => {
@@ -53,5 +55,6 @@ div.querySelectorAll('[data-option-index]').forEach(item => {
         select2.selectedIndex = +item.dataset.optionIndex
         text.innerText = select2.value
         // console.log(text.innerText)
+        setTimeout(_=>focusOut.focus(),1)
     })
 })
