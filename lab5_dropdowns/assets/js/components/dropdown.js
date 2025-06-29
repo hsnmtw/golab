@@ -8,7 +8,7 @@ const template = `
     <div class="flex-v modified-drop-down abs w-100">
         <button class="flex-h ac spaced" type="button">
             <span class="selected-item">${select2.options[select2.options.selectedIndex].innerHTML}</span>
-            <span class="rel"><b class="abs fnt-diff">⌵</b></span>
+            <span class="rel"><b class="abs fnt-diff"></b></span>
         </button>
         <div class="grid">
             <div class="rb p-3 drop-down gap-1 flex-v" style="background-color:cornsilk">

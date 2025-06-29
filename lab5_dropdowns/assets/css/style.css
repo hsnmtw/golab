@@ -1,3 +1,19 @@
+@font-face{
+    font-family:Icons;
+    src:url(/assets/fonts/icons.eot);
+    src:url(/assets/fonts/icons.eot) format('embedded-opentype'),
+        url(/assets/fonts/icons.woff2) format('woff2'),
+        url(/assets/fonts/icons.woff) format('woff'),
+        url(/assets/fonts/icons.ttf) format('truetype'),
+        url(/assets/fonts/icons.svg) format('svg')
+        ;
+        font-style:normal;
+        font-weight:400;
+        font-variant:normal;
+        text-decoration:inherit;
+        text-transform:none;
+}
+
 :root {
     --primary: blue;
     --secondary: black;
@@ -57,12 +73,17 @@ main {
     position: relative;;
 }
 
+.fnt-diff:before {
+    content: "\f107";
+    font-family: 'Icons';
+    color:darkgreen
+}
 .fnt-diff {
-    font-family: Consolas;
+    /* font-family: Consolas;
     font-size: 9pt;
-    font-weight: bold;
+    font-weight: bold; */
     right: 1pt;
-    bottom: 1pt;
+    /* bottom: 1pt; */
 }
 
 .sm-fnt{

@@ -55,7 +55,11 @@ namespace web.Http
                 case "html" : contentType = "text/html";        break;
                 case "css"  : contentType = "text/"+ext;        break;
                 case "js"   : contentType = "text/javascript";  break;
+                case "svg"  : contentType = "image/svg+xml";    break;
                 case "ttf"  :
+                case "eot"  :
+                case "woff" :
+                case "woff2": contentType = "font/"+ext;        break;
                 case "zip"  : contentType = "application/octet-stream"; break;
             }
             using (var fs = File.OpenRead(path))
