@@ -11,7 +11,7 @@ namespace web
             int port = 80;
             if(args.Length>0 && args[0].All(char.IsNumber))
                 port = int.Parse(args[0]);
-            new Server().Run( port );
+            new Server().Run( port, maxRetry: 10 );
         }
     }
 }

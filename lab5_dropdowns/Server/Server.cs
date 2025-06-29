@@ -71,10 +71,15 @@ namespace web.Http
             return false;
         }
 
-        public void Run(int port = 80)
+        public void Run(int port = 80, int maxRetry = 100)
         {
             if(port==0) port=80;
             Start:
+            if(maxRetry--<0)
+            {
+                LogError("Exceeded number of max-retry, shutting down");
+                return;
+            }
             TcpListener server = null;
             try
             {
