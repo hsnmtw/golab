@@ -51,6 +51,9 @@ namespace web.Http
                 case "tiff" : contentType = "image/"+ext;       break;
                 case "pdf"  :
                 case "json" : contentType = "application/"+ext; break;
+                case "xml"  :
+                case "xslt" :
+                case "xhtml": 
                 case "htm"  :
                 case "html" : contentType = "text/html";        break;
                 case "css"  : contentType = "text/"+ext;        break;
