@@ -22,9 +22,36 @@
         <option>2</option>
         <option>3</option>
     </select>
+    <hr>
+    <div class="gof" style="display: grid; grid-template-columns: repeat(38, auto);gap:0.1em;background-color: #333;">
+        
+    </div>
     <script src="/assets/js/select.js"></script>
+    <script src="/assets/js/gof.js"></script>
     <script defer>
         modernizeSelect('select')
+        const gof = document.querySelector('.gof')
+        const grid = []
+        for(let row=0;row<12;row++) {
+            grid.push([])
+            for(let col=0;col<38;col++){
+                const cell = document.createElement('i')
+                gof.append(cell)
+                grid[row].push(cell)
+                cell.innerHTML = '&nbsp;'
+                cell.style.fontSize = '5pt'
+            }
+        }
+        var game = new GameOfLife(0,0,state => {
+            for(let row=0;row<38;row++) {
+                for(let col=0;col<38;col++){
+                    grid[row][col].style.backgroundColor = state[row][col] == 0 ? '' : '#fff'
+                }
+            }
+        })
+        setInterval(game.mutate, 100)
+        //return {getState,mutate,countNeighbors}
+        
     </script>
 </body>
 </html>
