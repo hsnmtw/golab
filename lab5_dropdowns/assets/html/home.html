@@ -1,38 +1,30 @@
 <!DOCTYPE html>
-<html translate="no" lang="en-US" data-dir="ltr">
-    <head>
-        <meta name="google" content="notranslate">
-        <meta http-equiv="Content-Type" content="text/html; charset=windows-1256" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
-        <title></title>
-        <link rel="stylesheet" href="/assets/css/style.css">
-    </head>
-    <body class="basic minimal mx-0 main-back-color p-10">
-        <div class="grid-n p-10 gap-5" style="--columns:2">
-            <label>Select Item - no change</label>
-            <select name="select1">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-            </select>
-
-            <label>Select Item - modified</label>
-            <div class="grid-n" style="--columns:1; position: relative;">
-                <select name="select2">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                </select>
-            </div>
-
-            <label>Select Item - not modified</label>
-            <select name="select3">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-            </select>
-        </div>
-        <script type="module" src="/assets/js/components/dropdown.js"></script>
-    </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/assets/css/select.css">
+</head>
+<body style="padding: 10em;" class="flex-h">
+    <select>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+    </select>
+    <select>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+    </select>
+    <select>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+    </select>
+    <script src="/assets/js/select.js"></script>
+    <script defer>
+        modernizeSelect('select')
+    </script>
+</body>
 </html>
