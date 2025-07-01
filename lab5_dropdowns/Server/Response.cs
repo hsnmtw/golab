@@ -8,6 +8,7 @@ namespace web.Http
 {
     public class HttpResponse
     {
+        public bool IsFlushed { get; private set; }
         private readonly Dictionary<string,string> _headers = new Dictionary<string,string>();        
         private readonly Stream _stream;
         public HttpResponse(Stream stream)
@@ -38,6 +39,7 @@ namespace web.Http
 
         public void WriteFile(string path)
         {
+            if(IsFlushed) return;
             string contentType = "text/plain";
             string ext = GetLast(path.Split('.'));
             switch (ext)
@@ -105,10 +107,9 @@ namespace web.Http
         }
 
 
-        private bool isFlused = false; 
         public void Write(byte[] buffer)
         {
-            if(isFlused) return;
+            if(IsFlushed) return;
             if(!_headers.ContainsKey("status")) _headers["status"] = "200";
             //_headers["content-length"] = buffer.Length.ToString();
             var _buffer = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n");
@@ -124,7 +125,7 @@ namespace web.Http
 
             _stream.Write(buffer,0,buffer.Length);
             _stream.Flush();
-            isFlused = true;
+            IsFlushed = true;
         }
     }
 }
