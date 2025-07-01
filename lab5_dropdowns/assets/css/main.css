@@ -1,0 +1,12 @@
+*,*::after,*::before { box-sizing: border-box; }
+body,html {
+    min-height: 100vh;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(var(--columns),auto);
+}
+.gap-1 { gap: 5px; }
+.mx-auto { margin-inline: auto; }
+.w-50 { width: 50%; }
+.w-25 { width: 25%; }

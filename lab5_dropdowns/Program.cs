@@ -17,6 +17,10 @@ namespace web
                 if(req.Query("err")=="500") 
                     throw new Exception(string.Format("middleware test : {0}", req.Path ));
             });
+            //server.AddMiddleware((req,res)=>{
+            //    if(req.Cookie("session_id") == "" && !req.Path.StartsWith("/assets"))
+            //        req.Path = "/assets/html/user/login.html";
+            //});
             server.Run( port, maxRetry: 10 );
         }
     }

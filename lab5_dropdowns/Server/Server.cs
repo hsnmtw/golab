@@ -127,11 +127,11 @@ namespace web.Http
                                 string request = Encoding.UTF8.GetString(buffer);
                                 req = new HttpRequest(request);
                                 res = new HttpResponse(stream);                            
-                                if(req.Path=="/") req.Path = "/assets/html/home.html";
+
                                 foreach (var action in middleware.Actions)
-                                {
                                     action(req,res);
-                                }
+
+                                if(req.Path=="/") req.Path = "/assets/html/home.html";
                                 string route = string.Format("{0}:{1}",req.Method,req.Path);
                                 if(!(IsStaticFile(req, res) || IsHandled(req, res)))
                                     PageNotFoundHandler(req,res);
