@@ -10,14 +10,33 @@ namespace web.Http
 {
     public class Server
     {
+        public Action<HttpRequest,HttpResponse> PageNotFoundHandler { get; set; }
+        public Action<HttpRequest,HttpResponse> ServerErrorHandler { get; set; }
         private Dictionary<string,Action<HttpRequest,HttpResponse>> Handlers { get; set; }
+        private readonly Middleware middleware;
         public Server()
         {
+            PageNotFoundHandler = (req,res) => {
+                res.SetHeader("status","404");
+                res.WriteFile("./assets/html/errors/404.html");                                
+                LogWarning("Page not found: 404 - " + req.Path);
+            };
+            ServerErrorHandler = (req,res) => {
+                res.SetHeader("status","500");
+                res.WriteFile("./assets/html/errors/500.html");                                
+                LogError("Server Error: 500 - " + req.Path);
+            };
+            middleware = new Middleware();
             Handlers = new Dictionary<string, Action<HttpRequest,HttpResponse>>();
             Handlers["GET:/favicon.ico"] = (req,res) => {
                 LogWarning("no favicon.... just return empty response");
                 res.Write(new byte[]{});
             };
+        }
+
+        public void AddMiddleware(Action<HttpRequest,HttpResponse> action)
+        {
+            middleware.Actions.Add(action);
         }
 
         public static void LogInfo(string message)
@@ -97,23 +116,37 @@ namespace web.Http
                         // Log("Connected!");
                         using (NetworkStream stream = client.GetStream())
                         {
-                            byte[] buffer = new byte[1024];
-                            stream.Read(buffer,0,buffer.Length);
-                            string request = Encoding.UTF8.GetString(buffer);
-                            var req = new HttpRequest(request);
-                            var res = new HttpResponse(stream);                            
-                            if(req.Path=="/") req.Path = "/assets/html/home.html";
-                            string route = string.Format("{0}:{1}",req.Method,req.Path);
-                            if(!(IsStaticFile(req, res) || IsHandled(req, res)))
+
+                            HttpRequest req = null;
+                            HttpResponse res = null;
+
+                            try
                             {
-                                res.SetHeader("status","404");
-                                // res.Write("404 Page Not Found");
-                                res.WriteFile("./assets/html/errors/404.html");                                
-                                LogWarning("Page not found: 404 - " + route);
-                            }else{
-                                LogInfo(route);
+                                byte[] buffer = new byte[1024];
+                                stream.Read(buffer,0,buffer.Length);
+                                string request = Encoding.UTF8.GetString(buffer);
+                                req = new HttpRequest(request);
+                                res = new HttpResponse(stream);                            
+                                if(req.Path=="/") req.Path = "/assets/html/home.html";
+                                foreach (var action in middleware.Actions)
+                                {
+                                    action(req,res);
+                                }
+                                string route = string.Format("{0}:{1}",req.Method,req.Path);
+                                if(!(IsStaticFile(req, res) || IsHandled(req, res)))
+                                    PageNotFoundHandler(req,res);
+                                else
+                                    LogInfo(route);
                             }
-                            stream.Flush();
+                            catch(Exception ex)
+                            {
+                                LogError("TCP/LISTENER ERROR: "+ex.ToString());
+                                ServerErrorHandler(req,res);
+                            }
+                            finally
+                            {
+                                stream.Flush();
+                            }
                         }
                     }
                 }
@@ -121,7 +154,7 @@ namespace web.Http
             catch(Exception ex)
             {
                 LogError("----------------------------------------------------------------------");
-                LogError(ex.ToString());
+                LogError("SERVER ERROR: "+ex.ToString());
                 LogError("----------------------------------------------------------------------");
             }
             finally

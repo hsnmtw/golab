@@ -130,9 +130,9 @@ namespace web.Http
         public string Path { get { return _path; } set { _path = (""+value).Trim().ToLower(); } }
         public string Body { get { return _body; } }
 
-        public string Header(string name) { return _headers[(""+name).ToLower()]; }
-        public string Form(string name) { return _form[(""+name).ToLower()]; }
-        public string Query(string name) { return _query[(""+name).ToLower()]; }
-        public string Cookie(string name) { return _cookies[(""+name).ToLower()]; }
+        public string Header(string name) { return string.IsNullOrEmpty(name) || !_headers.ContainsKey(name) ? "" : _headers[(""+name).ToLower()]; }
+        public string Form(string name)   { return string.IsNullOrEmpty(name) || !_form.ContainsKey(name)    ? "" : _form[(""+name).ToLower()]; }
+        public string Query(string name)  { return string.IsNullOrEmpty(name) || !_query.ContainsKey(name)   ? "" : _query[(""+name).ToLower()]; }
+        public string Cookie(string name) { return string.IsNullOrEmpty(name) || !_cookies.ContainsKey(name) ? "" : _cookies[(""+name).ToLower()]; }
     }
 }

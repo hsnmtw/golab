@@ -31,13 +31,13 @@
     <script defer>
         modernizeSelect('select')
         const gof = document.querySelector('.gof')
-        const grid = []
+        const grid = xrange(0,38).map(_=>xrange(0,38).map(_=>{}))
         for(let row=0;row<12;row++) {
             grid.push([])
             for(let col=0;col<38;col++){
                 const cell = document.createElement('i')
                 gof.append(cell)
-                grid[row].push(cell)
+                grid[row][col]=cell
                 cell.innerHTML = '&nbsp;'
                 cell.style.fontSize = '5pt'
             }
@@ -45,11 +45,14 @@
         var game = new GameOfLife(0,0,state => {
             for(let row=0;row<38;row++) {
                 for(let col=0;col<38;col++){
-                    grid[row][col].style.backgroundColor = state[row][col] == 0 ? '' : '#fff'
+                    //console.log(row,col)
+                    //console.log(grid)
+                    if(grid[row][col] && grid[row][col].style)
+                        grid[row][col].style.backgroundColor = state[row][col] == 0 ? '' : '#fff'
                 }
             }
         })
-        setInterval(game.mutate, 100)
+        setTimeout(()=>{ setInterval(game.mutate, 100) }, 1000)
         //return {getState,mutate,countNeighbors}
         
     </script>

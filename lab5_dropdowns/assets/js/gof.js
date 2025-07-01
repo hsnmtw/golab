@@ -1,17 +1,18 @@
 Array.prototype.sum = function(){ return this.reduce(function(a,x){return a+x;},0); }
 
+function xrange(start, end) /* number[] */ {
+    var ans = [];
+    for (var i = start; i <= end; i++) {
+        ans.push(i);
+    }
+    return ans;
+}
 
 function GameOfLife(w,h,callback) /* object */ {
     if(!w||w===0) w=38
     if(!h||h===0) h=38
 
-    function xrange(start, end) /* number[] */ {
-        var ans = [];
-        for (var i = start; i <= end; i++) {
-            ans.push(i);
-        }
-        return ans;
-    }
+    
 
     let state /* number[][] */ = xrange(0,w).map(_=>xrange(0,h).map(_=>0))
 //1
