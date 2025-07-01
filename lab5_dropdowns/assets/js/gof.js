@@ -1,11 +1,11 @@
 Array.prototype.sum = function(){ return this.reduce(function(a,x){return a+x;},0); }
 
 
-function GameOfLife(w,h,callback){
+function GameOfLife(w,h,callback) /* object */ {
     if(!w||w===0) w=38
     if(!h||h===0) h=38
 
-    function xrange(start, end) {
+    function xrange(start, end) /* number[] */ {
         var ans = [];
         for (var i = start; i <= end; i++) {
             ans.push(i);
@@ -13,7 +13,7 @@ function GameOfLife(w,h,callback){
         return ans;
     }
 
-    let state = xrange(0,w).map(_=>xrange(0,h).map(_=>0))
+    let state /* number[][] */ = xrange(0,w).map(_=>xrange(0,h).map(_=>0))
 //1
     state[5][1]=1
     state[6][1]=1
@@ -70,7 +70,7 @@ function GameOfLife(w,h,callback){
 
     
 
-    const neighbors = [
+    const neighbors /* number[][] */ = [
         [-1,-1],
         [-1, 0],
         [-1,+1],
@@ -81,7 +81,7 @@ function GameOfLife(w,h,callback){
         [ 0,+1],
     ]
 
-    function countNeighbors(y,x){
+    function countNeighbors(y,x) /* number */ {
         return neighbors.map(n => y+n[0]>-1 
                                && y+n[0]<state.length 
                                && x+n[1]>-1 
@@ -89,7 +89,7 @@ function GameOfLife(w,h,callback){
     }
 
     function mutate(){
-        const generation = xrange(0,w).map(_=>xrange(0,h).map(_=>0))
+        const generation /* number[][] */ = xrange(0,w).map(_=>xrange(0,h).map(_=>0))
         for(let y=0;y<state.length;y++){
             for(let x=0;x<state[y].length;x++){
                 const s = state[y][x]
@@ -100,20 +100,14 @@ function GameOfLife(w,h,callback){
                                               : s     
             }
         }
+        if(callback && typeof callback === "function") 
+            callback(generation)
         state=generation
-        if(callback && typeof callback === "function") callback(state)
     }
 
-    function getState(){
+    function getState() /* number[][] */ {
         return state.map(y => y.map(x=>x===0?0:1))
     }
 
-    // setInterval(mutate,500)
-
-    return {getState,mutate,countNeighbors}
+    return {getState,mutate}
 }
-
-// each('[data-tab-body="0"]',x=>x.innerHTML='<pre data-gol></pre>')
-// const gol = new GameOfLife();
-// const pre = QSA('pre[data-gol]')[1];
-// setInterval(()=>{ pre.innerHTML = gol.getState(gol.mutate())  },100)

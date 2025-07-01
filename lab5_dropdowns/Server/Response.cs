@@ -42,6 +42,7 @@ namespace web.Http
             string ext = GetLast(path.Split('.'));
             switch (ext)
             {
+                case "md"   : contentType = "text/markdown"; break;
                 case "png"  :
                 case "jpg"  :
                 case "jpeg" :
@@ -49,21 +50,35 @@ namespace web.Http
                 case "bmp"  :
                 case "tif"  :
                 case "tiff" : contentType = "image/"+ext;       break;
+                case "svg"  : contentType = "image/svg+xml";    break;
+                case "zip"  :
+                case "rtf"  :
                 case "pdf"  :
-                case "json" : contentType = "application/"+ext; break;
                 case "xml"  :
+                case "json" : contentType = "application/"+ext; break;
+                case "txt"  :
                 case "xslt" :
                 case "xhtml": 
                 case "htm"  :
-                case "html" : contentType = "text/html";        break;
+                case "html" : 
+                case "csv"  :
                 case "css"  : contentType = "text/"+ext;        break;
+                case "mjs"  :
                 case "js"   : contentType = "text/javascript";  break;
-                case "svg"  : contentType = "image/svg+xml";    break;
+                case "otf"  :
                 case "ttf"  :
                 case "eot"  :
                 case "woff" :
                 case "woff2": contentType = "font/"+ext;        break;
-                case "zip"  : contentType = "application/octet-stream"; break;
+                case "dll"  :
+                case "msi"  :
+                case "exe"  : contentType = "application/octet-stream"; break;
+                case "doc"  :
+                case "docx" : contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; break;
+                case "xls"  :
+                case "xlsx" : contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"; break;
+                case "ppt"  :
+                case "pptx" : contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; break;
             }
             using (var fs = File.OpenRead(path))
             {
