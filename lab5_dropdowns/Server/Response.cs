@@ -95,7 +95,7 @@ namespace web.Http
                 _stream.Flush();
                 fs.Close();
             }
-
+            IsFlushed = true;
         }
 
         private static void WriteTo(Stream source, Stream target)
