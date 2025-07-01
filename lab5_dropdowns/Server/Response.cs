@@ -23,7 +23,7 @@ namespace web.Http
 
         public void SetCookie(string name, string value, DateTime expiry)
         {
-            _headers["set-cookie"] = string.Format("{0}={1}; Expires={2}; Secure; HttpOnly; Path=/",name,value,expiry);
+            SetHeader("Set-Cookie", string.Format("{0}={1}; Expires={2}; Secure; HttpOnly; Path=/",name,value,expiry));
         }
 
         public void Write(string content)
