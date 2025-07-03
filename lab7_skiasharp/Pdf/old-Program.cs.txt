@@ -1,0 +1,83 @@
+﻿using SkiaSharp;
+using SkiaSharp.Internals; 
+
+const float A4_WIDTH = 595;
+const float A4_HEIGHT = 842;
+
+
+using SKDocument document = SKDocument.CreatePdf("./test.pdf");
+SKCanvas canvas = document.BeginPage(A4_WIDTH, A4_HEIGHT); //A4 Portrait
+string longText = 
+"""
+Eiusmod occaecat ex qui est. Velit labore quis aliquip Lorem amet ex aliqua deserunt non velit ea. Laboris laborum enim dolor veniam proident esse dolor labore sit veniam eu.
+
+Et quis commodo minim adipisicing qui et labore minim sunt adipisicing. Elit proident nostrud aliqua enim excepteur eu. Velit ad commodo sit eu elit laboris laborum anim dolore consequat sint veniam qui commodo.
+
+Proident velit duis culpa consectetur ea veniam commodo ut quis ea. Commodo minim ex dolore non ad occaecat et aute aliqua excepteur occaecat excepteur eu. Excepteur do sit consectetur labore dolor commodo. Reprehenderit laborum voluptate adipisicing exercitation non laboris sit duis eiusmod esse reprehenderit. Incididunt laboris et duis consectetur officia exercitation.
+
+Do nostrud dolore pariatur ipsum culpa ipsum qui quis sint nulla. Non nisi Lorem in sint consectetur cillum consequat et. Deserunt est nostrud nostrud ut quis commodo sunt culpa velit ea cillum. Adipisicing eiusmod enim nisi laborum ullamco sunt anim exercitation officia. Ipsum reprehenderit sint esse ullamco et. Amet eu veniam aute excepteur veniam velit culpa excepteur quis mollit quis dolor. Ut ad minim ut cupidatat officia consectetur qui fugiat excepteur.
+
+Qui nulla amet Lorem est minim quis do elit excepteur pariatur fugiat fugiat reprehenderit dolore. Ex officia cupidatat reprehenderit non esse veniam nulla ad mollit. Duis aliqua ut ipsum amet consequat irure ut eu qui. Elit ad deserunt ullamco minim aliquip tempor non. Sunt nisi ad officia fugiat fugiat dolore minim ad excepteur magna et mollit aute voluptate.
+
+Nulla Lorem tempor aliquip incididunt. Do tempor excepteur ex dolor mollit irure id sint voluptate sit Lorem aliquip aliqua aliqua. Nostrud minim anim nisi culpa duis dolor proident ipsum minim reprehenderit officia nulla voluptate. Cillum enim quis tempor ea esse deserunt irure. Consequat commodo mollit mollit deserunt ad nulla id quis aute proident ut velit reprehenderit.
+
+Culpa nostrud proident cillum duis non officia in do. Sint aliquip occaecat consequat sint do sit occaecat sint consectetur pariatur occaecat aliquip. Amet deserunt cupidatat nulla officia labore ut commodo est esse voluptate ea minim aute. Aute anim irure occaecat sit proident ipsum veniam reprehenderit esse. Magna consequat enim ad id sit aliqua irure labore adipisicing minim duis do dolore.
+
+Mollit labore proident exercitation ut sit ullamco tempor adipisicing consectetur consectetur laboris sit enim. Aliqua magna aute cupidatat ex ea dolore tempor irure ea esse Lorem voluptate commodo ipsum. Sint Lorem labore laborum velit eiusmod commodo amet cupidatat veniam officia velit enim duis. Commodo cupidatat laborum pariatur duis occaecat eiusmod velit nisi dolore aliquip eu labore labore ad. Eiusmod culpa commodo amet proident dolor minim ex magna tempor ea. Mollit incididunt aliqua consectetur et consequat ex laborum ut veniam. Occaecat dolore fugiat consectetur velit Lorem qui laborum minim est laborum incididunt cupidatat labore.
+
+Eiusmod quis sit labore mollit ipsum elit laborum non ad sint fugiat ad. Consectetur ullamco excepteur proident ea aute sunt commodo. Do sit exercitation culpa qui exercitation nostrud minim labore culpa sunt.
+
+Ex sunt nulla labore amet minim fugiat occaecat quis consectetur. Labore occaecat ex nulla cupidatat enim. Tempor nisi ad pariatur ipsum dolore eiusmod eu pariatur aliquip occaecat ea. Non irure veniam eu nulla. Deserunt qui est anim dolor mollit irure nisi. Laboris Lorem deserunt dolor reprehenderit reprehenderit. Cillum mollit in nulla anim duis eu fugiat do nulla aliqua ipsum nostrud nisi sunt.
+
+ZZZZZZZZZZZZZZZZZZZ 1
+
+Eiusmod occaecat ex qui est. Velit labore quis aliquip Lorem amet ex aliqua deserunt non velit ea. Laboris laborum enim dolor veniam proident esse dolor labore sit veniam eu.
+
+Et quis commodo minim adipisicing qui et labore minim sunt adipisicing. Elit proident nostrud aliqua enim excepteur eu. Velit ad commodo sit eu elit laboris laborum anim dolore consequat sint veniam qui commodo.
+
+Proident velit duis culpa consectetur ea veniam commodo ut quis ea. Commodo minim ex dolore non ad occaecat et aute aliqua excepteur occaecat excepteur eu. Excepteur do sit consectetur labore dolor commodo. Reprehenderit laborum voluptate adipisicing exercitation non laboris sit duis eiusmod esse reprehenderit. Incididunt laboris et duis consectetur officia exercitation.
+
+Do nostrud dolore pariatur ipsum culpa ipsum qui quis sint nulla. Non nisi Lorem in sint consectetur cillum consequat et. Deserunt est nostrud nostrud ut quis commodo sunt culpa velit ea cillum. Adipisicing eiusmod enim nisi laborum ullamco sunt anim exercitation officia. Ipsum reprehenderit sint esse ullamco et. Amet eu veniam aute excepteur veniam velit culpa excepteur quis mollit quis dolor. Ut ad minim ut cupidatat officia consectetur qui fugiat excepteur.
+
+Qui nulla amet Lorem est minim quis do elit excepteur pariatur fugiat fugiat reprehenderit dolore. Ex officia cupidatat reprehenderit non esse veniam nulla ad mollit. Duis aliqua ut ipsum amet consequat irure ut eu qui. Elit ad deserunt ullamco minim aliquip tempor non. Sunt nisi ad officia fugiat fugiat dolore minim ad excepteur magna et mollit aute voluptate.
+
+Nulla Lorem tempor aliquip incididunt. Do tempor excepteur ex dolor mollit irure id sint voluptate sit Lorem aliquip aliqua aliqua. Nostrud minim anim nisi culpa duis dolor proident ipsum minim reprehenderit officia nulla voluptate. Cillum enim quis tempor ea esse deserunt irure. Consequat commodo mollit mollit deserunt ad nulla id quis aute proident ut velit reprehenderit.
+
+Culpa nostrud proident cillum duis non officia in do. Sint aliquip occaecat consequat sint do sit occaecat sint consectetur pariatur occaecat aliquip. Amet deserunt cupidatat nulla officia labore ut commodo est esse voluptate ea minim aute. Aute anim irure occaecat sit proident ipsum veniam reprehenderit esse. Magna consequat enim ad id sit aliqua irure labore adipisicing minim duis do dolore.
+
+Mollit labore proident exercitation ut sit ullamco tempor adipisicing consectetur consectetur laboris sit enim. Aliqua magna aute cupidatat ex ea dolore tempor irure ea esse Lorem voluptate commodo ipsum. Sint Lorem labore laborum velit eiusmod commodo amet cupidatat veniam officia velit enim duis. Commodo cupidatat laborum pariatur duis occaecat eiusmod velit nisi dolore aliquip eu labore labore ad. Eiusmod culpa commodo amet proident dolor minim ex magna tempor ea. Mollit incididunt aliqua consectetur et consequat ex laborum ut veniam. Occaecat dolore fugiat consectetur velit Lorem qui laborum minim est laborum incididunt cupidatat labore.
+
+Eiusmod quis sit labore mollit ipsum elit laborum non ad sint fugiat ad. Consectetur ullamco excepteur proident ea aute sunt commodo. Do sit exercitation culpa qui exercitation nostrud minim labore culpa sunt.
+
+Ex sunt nulla labore amet minim fugiat occaecat quis consectetur. Labore occaecat ex nulla cupidatat enim. Tempor nisi ad pariatur ipsum dolore eiusmod eu pariatur aliquip occaecat ea. Non irure veniam eu nulla. Deserunt qui est anim dolor mollit irure nisi. Laboris Lorem deserunt dolor reprehenderit reprehenderit. Cillum mollit in nulla anim duis eu fugiat do nulla aliqua ipsum nostrud nisi sunt.
+
+ZZZZZZZZZZZZZZZZZZZ 2
+""";
+DrawText(canvas,longText.Split('\n'),new SKRect(10,10,A4_WIDTH-10,A4_HEIGHT-10), new SKPaint(), new SKFont());
+canvas.Save();
+document.Close();
+
+
+static void DrawText(SKCanvas canvas, string[] lines, SKRect rect, SKPaint paint, SKFont font)
+{
+	float spaceWidth = font.MeasureText(" ");
+	float wordX = rect.Left;
+	float wordY = rect.Top + font.Size;
+    foreach(var line in lines)
+    {
+        foreach (string word in line.Split(' '))
+        {
+            float wordWidth = font.MeasureText(word);
+            if (wordWidth <= rect.Right - wordX)
+            {
+                canvas.DrawText(word, wordX, wordY, SKTextAlign.Left, font, paint);
+                wordX += wordWidth + spaceWidth;
+                continue;
+            }
+            wordY += font.Spacing;
+            wordX = rect.Left;
+        }
+        wordY += font.Spacing;
+        wordX = rect.Left;        
+    }
+}
