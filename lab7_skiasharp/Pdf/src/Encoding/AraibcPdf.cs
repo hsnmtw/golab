@@ -130,6 +130,13 @@ public static class AraibcPdf
     };
 
     // private static readonly Regex _reIsArabic = new Regex("[\u0600-\u06ff]");
+
+    private static bool IsWordEndingWithTashkeel(string word, int respectToIndex)
+    {
+        if(string.IsNullOrEmpty(word)) return false;
+        if(respectToIndex>=word.Length) return false;
+        return word[(respectToIndex+1)..].All(x=>tashkeel.Contains(x)||!IsArabic($"{x}"));
+    }
     
     private static string GetUnShapedUnicode(string original)
     {
@@ -161,7 +168,7 @@ public static class AraibcPdf
                                        && r.Length == 5
                                        && r[4] == '2';
 
-                    if (cIdx == word.Length - 1 || !IsArabic($"{word[cIdx+1]}"))
+                    if (cIdx == word.Length - 1 || !IsArabic($"{word[cIdx+1]}") || IsWordEndingWithTashkeel(word,cIdx))
                         sb.Append(value[prevHas2shapes ? 0 : 3]);                        
                     else
                         sb.Append(value[prevHas2shapes ? 1 : 2]);   
@@ -251,12 +258,23 @@ public static class AraibcPdf
     public static string Transform(string source)
     {
         if(string.IsNullOrEmpty(source)) return source; 
+        source = string.Join("\uFDF2", source.Split("الله"));
+        source = string.Join("\uFDF2", source.Split("الل\u0651ه"));
+        source = string.Join("\uFDF2", source.Split("الل\u0651\u064Eه"));
         source = string.Join("\uFEFB", source.Split("لا"));
+        // source = string.Join("\uFEFB\u064E", source.Split("ل\u064Eا"));
+        // source = string.Join("\uFEFB\u0651", source.Split("ل\u0651"));
         source = string.Join("\uFEF5", source.Split("لآ"));
         source = string.Join("\uFEF7", source.Split("لأ"));
         source = string.Join("لــ\uFEF9", source.Split("للإ"));
         source = string.Join("\uFEF9", source.Split("لإ"));
         string result = Reverse(GetUnShapedUnicode(source));
-        return result;
+        char[] chars = result.ToCharArray();
+        for(int i=0;i<chars.Length;i++)
+        {
+                 if(chars[i] == '«') chars[i]='»';
+            else if(chars[i] == '»') chars[i]='«';
+        }
+        return new string(chars);
     }
 }

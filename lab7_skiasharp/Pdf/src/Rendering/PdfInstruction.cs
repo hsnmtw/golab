@@ -6,6 +6,8 @@ public enum Instruction
 {
     BeginPage,
     DrawText,
+    DrawImage,
+    DrawTable,
     DrawLine,
     DrawRect,
     EndPage,
@@ -20,9 +22,15 @@ public struct PdfInstruction
     public float Bottom { get; set; }
     public SKFont Font { get; set; }
     public SKPaint Paint { get; set; }
-    public string Text { get; set; }
-    public PageSizes PageSize { get; set; }
-
+    public string Content { get; set; }
+    public Table Table { get; set; }
+    public SKColor Fill { get; set; }
     public readonly SKRect Rect { get => new SKRect(Left,Top,Right,Bottom); }
+    public readonly SKPoint Point { get => new SKPoint(Left,Top); }
 
+}
+
+public struct Table {
+    public float[] ColumnWidths { get; set; }
+    public object[][] Data { get; set; }
 }

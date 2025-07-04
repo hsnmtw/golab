@@ -68,7 +68,7 @@ public static class TextRenderer
                     Right = 200,
                     Font = font,
                     Paint = paint,
-                    Text = $"{word}"
+                    Content = $"{word}"
                 };
                 wordX += (wordWidth + spaceWidth) * (ltr?1:-1);
                 

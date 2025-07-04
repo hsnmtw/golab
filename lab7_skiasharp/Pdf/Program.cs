@@ -14,19 +14,37 @@ File.WriteAllText("./arch.txt", AraibcPdf.Transform(longText));
 
 using var fs = File.Create("./mypdf.pdf");
 using var pdf = new PdfDocument(fs);
-var font = new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\segoeui.ttf")) { ScaleX = 1.1f };
+// var font = new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\segoeui.ttf")) { ScaleX = 1.1f };
+pdf.Font = new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\timesbd.ttf")) { ScaleX = 1f, Size = 12 };
 var paint = new SKPaint(){ Color = ColorManager.FromHex("#333") };
 pdf.AddInstruction(new PdfInstruction{ Instruction = Instruction.BeginPage });
+pdf.AddInstruction(new PdfInstruction{ Instruction = Instruction.DrawImage, Left = 10, Top = 10, Right = 50, Bottom = 50, Content = "./data/logo.jpg"});
+
+
+pdf.AddInstruction(new PdfInstruction{ 
+    Instruction = Instruction.DrawTable, 
+    Table = new Table {
+        ColumnWidths = [1,1,1], // equaly distributed
+        Data = [
+            [1,2,3],
+            [4,5,6],
+            [7,8,9]
+        ]
+    }
+});
+
+
 pdf.AddInstruction(new PdfInstruction{
     Instruction = Instruction.DrawText,
-    Top = 60,
+    Top = 130,
     Left = 20,
     Right = PdfDocument.A4_WIDTH-30, 
     Bottom = PdfDocument.A4_HEIGHT - 70,
     Paint = paint,
-    Font = font,
-    Text = longText
+    Font = pdf.Font,
+    Content = longText
 });
+
 pdf.AddInstruction(new PdfInstruction{ Instruction = Instruction.EndPage });
 pdf.Close();
 

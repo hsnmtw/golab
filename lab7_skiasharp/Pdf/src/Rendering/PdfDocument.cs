@@ -14,12 +14,27 @@ public class PdfDocument(Stream stream, PageSizes pageSize = PageSizes.A4) : IDi
     private readonly SKDocument document = SKDocument.CreatePdf(stream);    
     private Queue<PdfInstruction> instructions = [];
 
+    public SKFont Font { get; set; } = new SKFont();
+
     public void AddInstruction(PdfInstruction instruction)
     {
+        float y = 60;
         if(instruction.Instruction is Instruction.DrawText)
         {
-            foreach (var i in TextRenderer.BreakdownInstruction(false,instruction.Text,1,instruction.Rect,instruction.Paint,instruction.Font))
+            foreach (var i in TextRenderer.BreakdownInstruction(false,instruction.Content,1,instruction.Rect,instruction.Paint,instruction.Font))
+            {
                 instructions.Enqueue(i);
+                y = i.Top + Font.Spacing;
+            }
+            return;
+        }
+        if(instruction.Instruction is Instruction.DrawTable)
+        {
+            foreach (var i in TableRenderer.BreakDownTableInstruction(instruction.Table,y,Font))
+            {
+                instructions.Enqueue(i);
+                y = i.Top + Font.Spacing;
+            }
             return;
         }
         instructions.Enqueue(instruction);
@@ -45,7 +60,7 @@ public class PdfDocument(Stream stream, PageSizes pageSize = PageSizes.A4) : IDi
                     A4_WIDTH-50,
                     20,
                     SKTextAlign.Right,
-                    new SKFont(),
+                    Font,
                     new SKPaint());
                 canvas.DrawLine(10,25,A4_WIDTH-10,25,new SKPaint(){Color=SKColors.Red});
                 break;
@@ -58,12 +73,26 @@ public class PdfDocument(Stream stream, PageSizes pageSize = PageSizes.A4) : IDi
                 case Instruction.DrawText:
                 // System.Console.WriteLine("[pdf] draw text");
                 canvas.DrawText(
-                    i.Text,
+                    i.Content,
                     i.Left,
                     i.Top,
                     SKTextAlign.Right,
-                    i.Font,
+                    i.Font ?? Font,
                     i.Paint);
+                break;
+
+                case Instruction.DrawRect:
+                
+                canvas.DrawRect(i.Rect, new SKPaint() { Style = SKPaintStyle.Stroke, Color = ColorManager.FromHex("#333") });
+                canvas.DrawRect(i.Rect,new SKPaint(){ Style = SKPaintStyle.Fill,Color = ColorManager.FromHex("#ffeecc") });
+                break;
+
+                case Instruction.DrawImage:
+                canvas.DrawBitmap(SKBitmap.Decode(File.ReadAllBytes(i.Content)),i.Rect);
+                break;
+
+                default:
+                System.Console.WriteLine("Unknown instruction: {0}", i.Instruction);
                 break;
             }
         }
