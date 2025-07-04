@@ -1,0 +1,43 @@
+using SkiaSharp;
+
+namespace Pdf.Rendering;
+
+public enum PageSizes {A4}
+public delegate void PageHeaderEvent(SKCanvas canvas, int page);
+public class PdfDocument(Stream stream) : IDisposable
+{
+    public const float A4_WIDTH = 595;
+    public const float A4_HEIGHT = 842;    
+    
+    private readonly SKDocument document = SKDocument.CreatePdf(stream);
+    private int page = 1;
+    public SKCanvas AddPage(PageSizes pageSize = PageSizes.A4)
+    {
+        document.EndPage();
+        float w = pageSize == PageSizes.A4 ? A4_WIDTH : 100;
+        float h = pageSize == PageSizes.A4 ? A4_HEIGHT : 100;
+        var canvas = document.BeginPage(w,h);
+        Header?.Invoke(canvas,page++);
+        return canvas;
+    }
+    public float Cursor { get; set; }
+    public PageHeaderEvent? Header { get; set; }
+    public PageHeaderEvent? Footer { private get; set; }
+    public void Close()
+    { 
+        // var pages = canvases.Count;
+        // for(int page=0;page<pages;page++)
+        // {
+        //     var canvas = canvases.Dequeue();//[page];
+        //     Header?.Invoke(canvas,page+1,pages);
+        //     Footer?.Invoke(canvas,page+1,pages);
+        //     canvas.Save();
+        // }
+        document.Close();
+    }
+
+    public void Dispose()
+    {
+        Close();
+    }
+}

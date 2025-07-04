@@ -1,85 +1,99 @@
 using SkiaSharp;
-using AraibcPdfUnicodeGlyphsResharper;
+using Pdf.Styling;
+using Pdf.Rendering;
+using Pdf.Encoding;
 
+//run tests
+Pdf.Tests.TestsRunner.Run();
 
-string longText = 
-"""
-ارخميديس (باليونانية Αρχιμήδης وتلفظ [aɾ.çi.ˈmi.ðis] و [ar.kʰi.ˈmɛ:.dɛ:s] عند الأقدمين). أو أرشميدس كان عالم رياضيات يونانى ، فيزيائى ، ومهندس ، و مخترع ، وعالم فلك.
-حياته
+string longText = File.ReadAllText("./data/long.txt")        
 
-ارخميديس اتولد سنة 287 قبل الميلاد فى سيراكوسا ، ورغم ان مش كل تفاصيل حياته معروفه ، لكنه كان واحد من ابرز العلما فى العصور القديمه . ارشميدس اسس علم استاتيكا الموائع وشرح مبدأ العتله و صمم الات مبتكره ، بما فيها المحركات والمضخات اللولبيه اللى اتسمت على اسمه. و هو اللى اكتشف قانون الطفو
-وفاه
-
-ارخميديس مات سنة 212 قبل الميلاد 
-
-"""
 ;
 
-const float A4_WIDTH = 595;
-const float A4_HEIGHT = 842;
+File.WriteAllText("./arch.txt", AraibcPdf.Transform(longText));
 
-using var document = SKDocument.CreatePdf("./mypdf.pdf");
+using var fs = File.Create("./mypdf.pdf");
+using var pdf = new PdfDocument(fs);
 
-using var canvas = document.BeginPage(A4_WIDTH, A4_HEIGHT);
 
-DrawText(
-    canvas, 
+var font = new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\segoeui.ttf")) { ScaleX = 1.1f };
+var paint = new SKPaint(){ Color = ColorManager.FromHex("#333") };
+pdf.Header = (canvas,page) => {
+    TextRenderer.DrawText(
+        canvas, 
+        false, 
+        $"الصفحة {page}", 
+        1.1f, 
+        new SKRect(20,20, PdfDocument.A4_WIDTH-30, 50),
+        paint, 
+        font
+    );
+    canvas.DrawLine(20,50,PdfDocument.A4_WIDTH-30, 50, paint);
+};
+
+TextRenderer.DrawText(
+    pdf.AddPage(), 
     false, 
     longText, 
     1.1f, 
-    new SKRect(20,20, A4_WIDTH-30, 230),
-    new SKPaint(){ Color = SKColors.DarkBlue }, 
-    new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\segoeui.ttf"))
-    );
+    new SKRect(20,60, PdfDocument.A4_WIDTH-30, PdfDocument.A4_HEIGHT - 70),
+    paint, 
+    font,
+    pdf
+);
 
-canvas.Save();
 
-document.Close();
 
-static void DrawText(SKCanvas canvas, bool ltr, string longText, float lineHeight, SKRect rect, SKPaint paint, SKFont font)
-{
-    string[] lines = ltr 
-                     ? longText.Split("\r\n") 
-                     : AraibcPdfExtention.ArabicWithFontGlyphsToPfd(longText).Split("\r\n");
-	float spaceWidth = font.MeasureText(" ");
+pdf.Close();
+
+ColorManager.FromHex("#ffeecc");
+ColorManager.FromHex("#fbafff");
+
+
+// static void DrawText(SKCanvas canvas, bool ltr, string longText, float lineHeight, SKRect rect, SKPaint paint, SKFont font)
+// {
+//     string[] lines = ltr 
+//                      ? longText.Split("\r\n") 
+//                      : AraibcPdfExtention.ArabicWithFontGlyphsToPfd(longText).Split("\r\n");
+// 	float spaceWidth = font.MeasureText(" ");
     
-    canvas.DrawRect(rect,new SKPaint{
-        Style = SKPaintStyle.Stroke,
-        Color = SKColors.BlueViolet,
-    });
-    canvas.DrawRect(new SKRect(rect.Left+5,rect.Top+5,rect.Right-5,rect.Bottom-5),new SKPaint{
-        Style = SKPaintStyle.Fill,
-        Color = new SKColor(55,255,11,100),
-    });
-    rect = new SKRect(rect.Left+10,rect.Top+10,rect.Right-10,rect.Bottom-10);
-    float start = ltr ? rect.Left : rect.Right;
-	float wordX = start;
-	float wordY = rect.Top + font.Size;
-    foreach(var line in lines)
-    {
-        var words = ltr ? line.Split(' ') : line.Split(' ').Reverse();
-        foreach (string word in words)
-        {
-            float wordWidth = font.MeasureText(word);
-            if (wordX - wordWidth<rect.Left || wordWidth > rect.Left + wordX)
-            {
-                wordY += font.Spacing * lineHeight;
-                wordX = start;
-            }
-            if(wordY>rect.Bottom) break;
-            canvas.DrawText(word, wordX, wordY, ltr?SKTextAlign.Left:SKTextAlign.Right, font, paint);
-            wordX += (wordWidth + spaceWidth) * (ltr?1:-1);
+//     canvas.DrawRect(rect,new SKPaint{
+//         Style = SKPaintStyle.Stroke,
+//         Color = ColorManager.FromHex("#333"),
+//     });
+//     canvas.DrawRect(new SKRect(rect.Left+5,rect.Top+5,rect.Right-5,rect.Bottom-5),new SKPaint{
+//         Style = SKPaintStyle.Fill,
+//         Color = ColorManager.FromHex("#ffeecc"),
+//     });
+//     rect = new SKRect(rect.Left+10,rect.Top+10,rect.Right-10,rect.Bottom-10);
+//     float start = ltr ? rect.Left : rect.Right;
+// 	float wordX = start;
+// 	float wordY = rect.Top + font.Size;
+//     foreach(var line in lines)
+//     {
+//         var words = ltr ? line.Split(' ') : line.Split(' ').Reverse();
+//         foreach (string word in words)
+//         {
+//             float wordWidth = font.MeasureText(word);
+//             if (wordX - wordWidth<rect.Left || wordWidth > rect.Left + wordX)
+//             {
+//                 wordY += font.Spacing * lineHeight;
+//                 wordX = start;
+//             }
+//             if(wordY>rect.Bottom) break;
+//             canvas.DrawText(word, wordX, wordY, ltr?SKTextAlign.Left:SKTextAlign.Right, font, paint);
+//             wordX += (wordWidth + spaceWidth) * (ltr?1:-1);
             
-        }
-        if(wordY>=rect.Bottom) 
-        {
-            System.Console.WriteLine("[wrn] unable to render whole text");
-            break;
-        }
-        wordY += font.Spacing * lineHeight;
-        wordX = start;        
-    }
-}
+//         }
+//         if(wordY>=rect.Bottom) 
+//         {
+//             System.Console.WriteLine("[wrn] unable to render whole text");
+//             break;
+//         }
+//         wordY += font.Spacing * lineHeight;
+//         wordX = start;        
+//     }
+// }
 
 
 
