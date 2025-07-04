@@ -6,5 +6,6 @@ public static class TestsRunner
     {
         Pdf.Tests.Encoding.ArabicTest.Test1();
         Pdf.Tests.Encoding.ArabicTest.Test2();
+        Pdf.Tests.Encoding.ArabicTest.Test3();
     }
 }

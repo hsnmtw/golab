@@ -37,6 +37,57 @@ public static class TextRenderer
 
         return true;
     }
+
+    public static IEnumerable<PdfInstruction> BreakdownInstruction(bool ltr, string longText, float lineHeight, SKRect rect, SKPaint paint, SKFont font)
+    {       
+        string[] lines = ltr 
+                        ? longText.Split("\r\n") 
+                        : AraibcPdf.Transform(longText).Split("\r\n");
+        float spaceWidth = font.MeasureText(" ");
+        float start = ltr ? rect.Left : rect.Right;
+        float wordX = start;
+        float wordY = rect.Top + font.Size;
+        foreach(var line in lines)
+        {
+            var words = ltr ? line.Split(' ') : line.Split(' ').Reverse();
+            foreach (string word in words)
+            {
+                float wordWidth = font.MeasureText(word);
+                if (wordX - wordWidth<rect.Left || wordWidth > rect.Left + wordX)
+                {
+                    wordY += font.Spacing * lineHeight;
+                    wordX = start;
+                }
+                if(wordY>rect.Bottom) break;
+                //canvas.DrawText(word, wordX, wordY, ltr?SKTextAlign.Left:SKTextAlign.Right, font, paint);
+                yield return new PdfInstruction {
+                    Instruction = Instruction.DrawText,
+                    Left = wordX,
+                    Top = wordY,
+                    Bottom = lineHeight + wordY+10,
+                    Right = 200,
+                    Font = font,
+                    Paint = paint,
+                    Text = $"{word}"
+                };
+                wordX += (wordWidth + spaceWidth) * (ltr?1:-1);
+                
+            }
+            if(wordY>=rect.Bottom) 
+            {
+                yield return new PdfInstruction {
+                    Instruction = Instruction.EndPage,
+                };
+                yield return new PdfInstruction {
+                    Instruction = Instruction.BeginPage,
+                };                
+                wordY = rect.Top;
+                wordX = start;            
+            }
+            wordY += font.Spacing * lineHeight;
+            wordX = start;        
+        }
+    }
     
     public static void DrawText(SKCanvas canvas, bool ltr, string longText, float lineHeight, SKRect rect, SKPaint paint, SKFont font, PdfDocument? pdf = null)
     {
@@ -86,9 +137,9 @@ public static class TextRenderer
                     System.Console.WriteLine("[wrn] unable to render whole text");
                     break;
                 }
-                canvas = pdf.AddPage();
-                wordY = rect.Top;
-                wordX = start;            
+                // canvas = pdf.AddPage();
+                // wordY = rect.Top;
+                // wordX = start;            
             }
             wordY += font.Spacing * lineHeight;
             wordX = start;        

@@ -14,36 +14,20 @@ File.WriteAllText("./arch.txt", AraibcPdf.Transform(longText));
 
 using var fs = File.Create("./mypdf.pdf");
 using var pdf = new PdfDocument(fs);
-
-
 var font = new SKFont(SKFontManager.Default.CreateTypeface(@"c:\Windows\Fonts\segoeui.ttf")) { ScaleX = 1.1f };
 var paint = new SKPaint(){ Color = ColorManager.FromHex("#333") };
-pdf.Header = (canvas,page) => {
-    TextRenderer.DrawText(
-        canvas, 
-        false, 
-        $"الصفحة {page}", 
-        1.1f, 
-        new SKRect(20,20, PdfDocument.A4_WIDTH-30, 50),
-        paint, 
-        font
-    );
-    canvas.DrawLine(20,50,PdfDocument.A4_WIDTH-30, 50, paint);
-};
-
-TextRenderer.DrawText(
-    pdf.AddPage(), 
-    false, 
-    longText, 
-    1.1f, 
-    new SKRect(20,60, PdfDocument.A4_WIDTH-30, PdfDocument.A4_HEIGHT - 70),
-    paint, 
-    font,
-    pdf
-);
-
-
-
+pdf.AddInstruction(new PdfInstruction{ Instruction = Instruction.BeginPage });
+pdf.AddInstruction(new PdfInstruction{
+    Instruction = Instruction.DrawText,
+    Top = 60,
+    Left = 20,
+    Right = PdfDocument.A4_WIDTH-30, 
+    Bottom = PdfDocument.A4_HEIGHT - 70,
+    Paint = paint,
+    Font = font,
+    Text = longText
+});
+pdf.AddInstruction(new PdfInstruction{ Instruction = Instruction.EndPage });
 pdf.Close();
 
 ColorManager.FromHex("#ffeecc");
