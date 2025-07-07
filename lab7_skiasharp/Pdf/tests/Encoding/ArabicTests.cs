@@ -1,4 +1,4 @@
-using Pdf.Encoding;
+using Pdf.HarfBuzz;
 
 namespace Pdf.Tests.Encoding;
 

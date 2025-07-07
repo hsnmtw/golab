@@ -1,14 +1,24 @@
 using SkiaSharp;
 using Pdf.Styling;
 using Pdf.Rendering;
-using Pdf.Encoding;
+using Pdf.HarfBuzz;
 
 //run tests
 Pdf.Tests.TestsRunner.Run();
 
-string longText = File.ReadAllText("./data/long.txt")        
+string longText = //File.ReadAllText("./data/long.txt");
+"""
+بعض الكلام العربي
 
-;
+وقت رفع البيان ١٤٤٧/٠١/١٢هـ 2025/07/07 م الساعة 03:44
+
+يليه كلام عربي و English Text composed of many words in between two arabic words بنفس السطر
+
+Start with English و ينتهي عربي
+
+يبدأ عربي and ends with English
+""";
+// ;
 
 File.WriteAllText("./arch.txt", AraibcPdf.Transform(longText));
 

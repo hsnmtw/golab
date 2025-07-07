@@ -1,17 +1,18 @@
 using System.Text;
 
-namespace Pdf.Encoding;
+namespace Pdf.HarfBuzz;
 
 public static class AraibcPdf
 {
-
+    //private static readonly char[] HINDI_NUMBERS = ['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'];
+    const char ALLAH = '\uFDF2';
     private static readonly HashSet<char> ARABIC_ALPHABET = [
         '\u0622', '\uFE81', '\uFE81', '\uFE82', '\uFE82',
         '\u0623', '\uFE83', '\uFE83', '\uFE84', '\uFE84',
         '\u0624', '\uFE85', '\uFE85', '\uFE86', '\uFE86',
         '\u0625', '\uFE87', '\uFE87', '\uFE88', '\uFE88',
         '\u0626', '\uFE89', '\uFE8B', '\uFE8C', '\uFE8A',
-        '\u0627', '\u0627', '\u0627', '\uFE8E', '\uFE8E',
+        '\u0627', '\uFE8D', '\uFE8D', '\uFE8E', '\uFE8E',
         '\u0628', '\uFE8F', '\uFE91', '\uFE92', '\uFE90',
         '\u0629', '\uFE93', '\uFE93', '\uFE94', '\uFE94',
         '\u062A', '\uFE95', '\uFE97', '\uFE98', '\uFE96',
@@ -45,24 +46,28 @@ public static class AraibcPdf
         '\u066E', '\uFBE4', '\uFBE8', '\uFBE9', '\uFBE5',
         '\u06AA', '\uFB8E', '\uFB90', '\uFB91', '\uFB8F',
         '\u06C1', '\uFBA6', '\uFBA8', '\uFBA9', '\uFBA7',
-        '\uFEFB', '\uFEFB', '\uFEFC', '\uFEFC', '\uFEFB',
-        '\uFEF5', '\uFEF5', '\uFEF6', '\uFEF6', '\uFEF5',
-        '\uFEF7', '\uFEF7', '\uFEF8', '\uFEF8', '\uFEF7',
-        '\uFEF9', '\uFEF9', '\uFEFA', '\uFEFA', '\uFEF9',
         '\u06E4', '\u06E4', '\u06E4', '\u06E4', '\uFEEE',
-        '\u064B',
-        '\u064C',
-        '\u064D',
-        '\u064E',
-        '\u064F',
-        '\u0650',
-        '\u0651',
-        '\u0652',
-        '\u0653',
-        '\u0654',
-        '\u0655',
-        .."ضصثقفغعهخحجدشسيبلاتنمكطئءؤرلاىةوزظألآإآ"
-    ]; 
+        'ا', '\uFEFB','\uFEFC',
+        'آ', '\uFEF5','\uFEF6',
+        'أ', '\uFEF7','\uFEF8',
+        'إ', '\uFEF9','\uFEFA',
+        '\uFDF2',
+        '\u0626',
+        '\u08A8',        
+        '\u064B', // Tanween^ “◌ً”
+        '\u064C', // TanweenW “◌ٌ”
+        '\u064D', // TanweenV “◌ٍ”
+        '\u064E', // Fatha    “◌َ”
+        '\u064F', // Damma    “◌ُ”
+        '\u0650', // Kasra    “◌ِ”
+        '\u0651', // Shadda   “◌ّ”
+        '\u0652', // Sokoon   “◌ْ”
+        '\u0653', // Mada     “◌ٓ”
+        '\u0654', // Hamza^   “◌ٔ”
+        '\u0655', // HamzaV   “◌ٕ”
+        'ـ'
+
+    ];
 
     private static readonly HashSet<char> tashkeel = [
         '\u064B', // Tanween^ “◌ً”
@@ -127,6 +132,7 @@ public static class AraibcPdf
         { '\uFEF7', ['\uFEF8', '\uFEF7', '\uFEF8', '\uFEF7', '2'] },// (ﻷ) Lam alef hamza
         { '\uFEF9', ['\uFEFA', '\uFEF9', '\uFEFA', '\uFEF9', '2'] },// (ﻹ) Lam alef kasra
         { '\u06E4', ['\u06E4', '\u06E4', '\u06E4', '\uFEEE', '2'] },// () Small High Madda 
+        { 'ـ',      ['ـ',      'ـ',      'ـ',      'ـ',      '2']}
     };
 
     // private static readonly Regex _reIsArabic = new Regex("[\u0600-\u06ff]");
@@ -138,7 +144,7 @@ public static class AraibcPdf
         return word[(respectToIndex+1)..].All(x=>tashkeel.Contains(x)||!IsArabic($"{x}"));
     }
     
-    private static string GetUnShapedUnicode(string original)
+    private static string GetShapedArabic(string original)
     {
         if(string.IsNullOrEmpty(original)) return original;
 
@@ -150,9 +156,45 @@ public static class AraibcPdf
             char prev = '\0';
             string word = words[wIdx];
 
+            if(word.Length==1){
+                sb.Append($"{word} ");
+                continue;
+            }
+
+            // var plain = string.Join("",word.ToCharArray().Except(tashkeel));
+
+            // if(plain is "الله")
+            // {
+            //     sb.Append(ALLAH);
+            //     continue;
+            // }
+
+            // if(plain.EndsWith("الله"))
+            // {
+            //     Stack<char> stack = [];
+            //     bool replaced = false;
+            //     for(int i=word.Length-1;i>=0;i--)
+            //     {
+            //         char ch = word[i];
+            //         if(!tashkeel.Contains(ch)) stack.Push(ch);
+            //         if(!(string.Join("",stack) is "الله" && i>0)) continue;                    
+            //         sb.Append(word[..(i-1)] + ALLAH);
+            //         replaced=true;
+            //         break;                    
+            //     }
+            //     if(replaced) continue;
+            // }
+
             for (int cIdx = 0; cIdx < word.Length; cIdx++)
             {
                 var ch = word[cIdx];
+
+                // if((cIdx==word.Length-1 || !ARABIC_ALPHABET.Contains(word[cIdx+1])) && (cIdx==0 || !ARABIC_ALPHABET.Contains(word[cIdx-1])))
+                // {
+                //     if(!tashkeel.Contains(ch)) prev = ch;
+                //     sb.Append(ch);
+                //     continue;
+                // }
 
                 if (!xUnicodeTable.TryGetValue(ch, out char[]? value))
                 {
@@ -193,82 +235,84 @@ public static class AraibcPdf
     
     private static bool IsArabic(string iWord)
     {
-        if(string.IsNullOrEmpty(iWord) || iWord.Trim().Length is 0) return false;
+        if(string.IsNullOrEmpty(iWord) || iWord.Trim().Length is 0) 
+            return false;
         foreach(var ch in iWord)
-        {
-            if(ARABIC_ALPHABET.Contains(ch)) return true;
-        }
+            if(ARABIC_ALPHABET.Contains(ch)) 
+                return true;
         return false;
     }
 
     private static string Reverse(string v)
     {
         if(string.IsNullOrEmpty(v)) return v;
-        
-        List<string> result = [];
-        List<string> lineWords = [];
-        Stack<string> en = [];
-        foreach(var line in v.Split("\r\n"))
-        {
-            string[] words = line.Split(' ');
-            for(int wIdx=0;wIdx<words.Length;wIdx++)
+        var tx = new List<string[]>();
+        var pr = new List<string>();
+        var en = new Stack<string>();
+        var lines = v.Split("\r\n");
+        foreach(var line in lines){
+            var words = line.Split(' ');
+            foreach(var w in words)
             {
-                string word = words[wIdx];
-
-                if(word.Trim().Length > 0 && IsArabic(word))
+                if(string.IsNullOrEmpty(w))
                 {
-                    //System.Console.WriteLine("ar='{0}'", words[i]);
-                    lineWords.AddRange(en);
-                    en.Clear();
-                    string pure = word.Trim();
-                    string reversed = new([.. pure.ToCharArray().Reverse()]);
-                    if(word.Length != reversed.Length) 
-                    {
-                        if($"{word[^1]}".Trim().Length == 0) reversed += $"{word[^1]}";
-                        else reversed = $"{word[0]}{reversed}";
-                    }
-                    lineWords.Add(reversed);
-                    if($"{word[^1]}".Trim().Length != 0)
-                        continue;
+                    pr.Add(w);
+                    continue;
                 }
-
-                en.Push(word);
+                if(!IsArabic(w)) 
+                {
+                    en.Push(w);
+                    continue;
+                }
+                pr.AddRange(en);
+                en.Clear();
+                pr.Add(string.Join("", w.ToCharArray().Reverse() ));//ReverseArabicCharacters(w)));
             }
-            if(en.Count>0)
-            {
-                if(lineWords.Count == 0) result.AddRange(en.Reverse()); 
-                else result.AddRange(en);
-            }
-            lineWords.Reverse();
-            result.AddRange(lineWords);
-            result.Add("\r\n");
-            lineWords.Clear();
+            pr.AddRange(en);
+            pr.Reverse();
+            tx.Add([.. pr]);
+            pr.Clear();
             en.Clear();
         }
-        
-        if(result.Count>0)
-            result.RemoveAt(result.Count-1);  //remove last line feed
-        
-        var r = string.Join(" ", result);
-
-        return r;
+        return string.Join("\r\n", tx.Select(x => string.Join(" ", x)));
     }
 
+    private static string Replace(string subj, string sep, string repl)
+    {
+        if(string.IsNullOrEmpty(subj)) return subj;
+        return string.Join(repl,subj.Split(sep));
+    }
 
     public static string Transform(string source)
     {
         if(string.IsNullOrEmpty(source)) return source; 
-        source = string.Join("\uFDF2", source.Split("الله"));
-        source = string.Join("\uFDF2", source.Split("الل\u0651ه"));
-        source = string.Join("\uFDF2", source.Split("الل\u0651\u064Eه"));
-        source = string.Join("\uFEFB", source.Split("لا"));
-        // source = string.Join("\uFEFB\u064E", source.Split("ل\u064Eا"));
-        // source = string.Join("\uFEFB\u0651", source.Split("ل\u0651"));
-        source = string.Join("\uFEF5", source.Split("لآ"));
-        source = string.Join("\uFEF7", source.Split("لأ"));
-        source = string.Join("لــ\uFEF9", source.Split("للإ"));
-        source = string.Join("\uFEF9", source.Split("لإ"));
-        string result = Reverse(GetUnShapedUnicode(source));
+
+        foreach(var ch in tashkeel){
+            source = Replace(source,$"{ch}","");
+        }
+
+        source = Replace(source,"لا","\uFEFB");
+        source = Replace(source,"لآ","\uFEF5");
+        source = Replace(source,"لأ","\uFEF7");
+        source = Replace(source,"لإ","\uFEF9");
+        source = Replace(source," الله ",$" {ALLAH} ");
+        source = Replace(source,"والله",$"و{ALLAH}");
+        source = Replace(source,"بالله",$"ب{ALLAH}");
+
+        // foreach(var ch in tashkeel){
+        //     source = Replace(source,$"ل{ch}ا"  ,$"\uFEFB{ch}");
+        //     source = Replace(source,$"ل{ch}آ"  ,$"\uFEF5{ch}");
+        //     source = Replace(source,$"ل{ch}أ"  ,$"\uFEF7{ch}");
+        //     source = Replace(source,$"ل{ch}إ" ,$"\uFEF9{ch}");
+        //     foreach(var ch2 in tashkeel){
+        //         source = Replace(source,$"ل{ch}{ch2}ا"  ,$"\uFEFB{ch}{ch2}");
+        //         source = Replace(source,$"ل{ch}{ch2}آ"  ,$"\uFEF5{ch}{ch2}");
+        //         source = Replace(source,$"ل{ch}{ch2}أ"  ,$"\uFEF7{ch}{ch2}");
+        //         source = Replace(source,$"ل{ch}{ch2}إ"  ,$"\uFEF9{ch}{ch2}");                
+        //     }
+        // }
+
+        string result = Reverse(GetShapedArabic(source));
         char[] chars = result.ToCharArray();
         for(int i=0;i<chars.Length;i++)
         {
