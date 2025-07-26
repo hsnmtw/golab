@@ -82,12 +82,12 @@ class Snake
         var(w,h) = board;
         IsAlive=!(x<0||x>w||y<0||y>h||Body.Contains(Head));
 
-        File.AppendAllLines("c:/temp/move.txt",[
-            json.Serialize(new{
-                board,
-                snake=this
-            })
-        ]);
+        // File.AppendAllLines("c:/temp/move.txt",[
+        //     json.Serialize(new{
+        //         board,
+        //         snake=this
+        //     })
+        // ]);
     }
 }
 
@@ -118,19 +118,23 @@ class MyForm : Form
             // if(snake.LastDirection != Direction.NONE) Redraw();
             if(board.Food == Point.Empty)
                 // board.Food = new Point(14,11);
-                board.Food = new Point(Random.Shared.Next(1,board.Width-1),Random.Shared.Next(1,board.Height-1));
+                board.Food = new Point(Random.Shared.Next(1,board.Width/2-1),Random.Shared.Next(1,board.Height/2-1));
 
             Redraw();
         };
     }
+
+    private static bool draown = false; 
+    const int factor = 25;
     public void Redraw(){
         var gfx = this.CreateGraphics();
-        gfx.FillRectangle(Brushes.Blue, new RectangleF(0,0,Width,Height));
-        var size = new SizeF(10,10);
+            gfx.FillRectangle(Brushes.Black, new RectangleF(0, 0, Width, Height));
+        
+        var size = new SizeF(factor,factor);
         void DrawCell(Point p, Brush brush, Pen pen)
         {
-            gfx.DrawRectangle(pen,new RectangleF(-1+p.X*10,-1+p.Y*10,11,11));
-            gfx.FillRectangle(brush,new RectangleF(new PointF(p.X*10,p.Y*10),size));
+            gfx.DrawRectangle(pen,new RectangleF(-1+p.X*factor,-1+p.Y*factor,factor+1,factor+1));
+            gfx.FillRectangle(brush,new RectangleF(new PointF(p.X*factor,p.Y*factor),size));
         }
 
         foreach(var p in _snake.Body)
@@ -182,9 +186,9 @@ public class Program
             Head = h,
             Body = [
                 h.W,
-                // h.W.W,
-                // h.W.W.W,
-                // h.W.W.W.W,
+                h.W.W,
+                h.W.W.W,
+                h.W.W.W.W,
             ]
         };
         MyForm form = new MyForm(snake,board){
@@ -197,7 +201,7 @@ public class Program
         var timer = new System.Timers.Timer(TimeSpan.FromSeconds(0.1));
         timer.Elapsed += (s,e) => {
             form.Redraw();
-            System.Console.WriteLine("????????");
+            // System.Console.WriteLine("????????");
             //Print(snake,board);
             // if(Console.KeyAvailable)
             // {

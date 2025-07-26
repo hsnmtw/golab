@@ -1,0 +1,42 @@
+.calendar {
+    border: 1px solid red;
+}
+
+.calendar-container:not(:focus-within) .drop-down-calendar,
+.hiden {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.relative {
+    position: relative;
+}
+.absolute {
+    position: absolute;
+}
+
+.drop-down-calendar {
+    background-color: yellow;
+    border: 1px solid orange;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-7 {
+    padding: 1em;
+    display: grid;
+    grid-template-columns: repeat(7,auto);
+    gap: 0.2rem;
+}
+
+.grid-7 span {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: 1px solid gray;
+}
