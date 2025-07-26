@@ -1,6 +1,6 @@
 (function () {
     function initCalendar(date) {
-        if (!date) return console.error("null date");
+        if (!date)                   return console.error("ERROR [initCalendar]: null date");
         if (!(date instanceof Date)) return console.error("ERROR [initCalendar]: date is expected, got ", date);
         
         const [y, m, d] = date.toISOString().split('T')[0].split('-').map(x => +x);
@@ -37,8 +37,8 @@
     function range(s, e) {
         if (typeof s !== "number") return console.error("ERROR [range]: bad start", s);
         if (typeof e !== "number") return console.error("ERROR [range]: bad end", e);
-        if (e < s) return console.error("ERROR [range]: e must be greater than s in range", s, e);
-        if (e - s > 31) return console.error("ERROR [range]: too many elements in range", e - s);
+        if (e < s)                 return console.error("ERROR [range]: e must be greater than s in range", s, e);
+        if (e - s > 31)            return console.error("ERROR [range]: too many elements in range", e - s);
         return s >= e ? [] : [s].concat(range(s + 1, e));
     }
 
