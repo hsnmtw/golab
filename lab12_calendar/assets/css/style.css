@@ -7,6 +7,7 @@
     display: none;
     visibility: hidden;
     opacity: 0;
+    transition: all ease-out 500ms;
 }
 
 .relative {
@@ -16,9 +17,15 @@
     position: absolute;
 }
 
+.gap-1 {
+    gap: 0.25rem;
+}
+
 .drop-down-calendar {
-    background-color: yellow;
-    border: 1px solid orange;
+    background-color: cornsilk;
+    border: 2px solid orange;
+    z-index: 2;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .flex-col {
@@ -33,10 +40,42 @@
     gap: 0.2rem;
 }
 
+.grid-7 span:not(.weekday):hover {
+    background-color: cadetblue;
+    color:white;
+    font-weight: bold;
+    transition: all ease-in 300ms;
+}
+
+.selected {
+    background-color: sandybrown;
+    color:white;
+    font-weight: bold;
+}
+
 .grid-7 span {
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
     outline: 1px solid gray;
+    min-width: 33px;
+    aspect-ratio: 1/1;
+    font-size: smaller;
+    cursor: pointer;
+    border-radius: 0.2rem;
+}
+
+.month-head {
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 33px;
+    font-size: 1.8rem;
+}
+
+.weekday {
+    background-color: #b0adad;
 }
