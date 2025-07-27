@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASM Test</title>
+</head>
+<body>
+    <h1>Web Assembly minimal example using D programming language</h1>
+    <div style="display: flex;">
+        <div>
+            <div class="form" style="display: grid;gap:1em;padding: 1em; grid-template-columns: repeat(4,1fr);align-items: center;">
+                <label>Number 1</label>
+                <label>Number 2</label>
+                <i></i>
+                <label>Result</label>
+
+                <input name="n1">
+                <input name="n2">
+
+                <button type="button" id="add">+</button>
+
+                <b style="background-color: cornsilk; padding: 0.3rem;" id="result">?</b>
+            </div>
+
+            <h5>Source Code:</h5>
+            <img width="500" src="/assets/img/source-code-d.png" alt="source-code-d.png"/>
+
+        </div>
+        <div>
+            <h5>Assembly:</h5>
+            <img width="600" src="/assets/img/assembly.png" alt="assembly.png"/>
+        </div>
+    </div>
+
+    <script>
+        function callback(a,b,c){
+            console.log(`invoked web assembly function add(${a},${b}) = ${c}`);
+        }
+        WebAssembly.instantiateStreaming(fetch("/assets/wasm/add.wasm"), {env: { callback }})
+        .then(wasm => {
+            const b = document.querySelector("button#add");
+            const r = document.querySelector("b#result");
+            const n1 = document.querySelector("input[name='n1']");
+            const n2 = document.querySelector("input[name='n2']");
+            if(!b||!r) return;
+            b.addEventListener("click",_=>{
+                r.innerHTML = wasm.instance.exports.add(n1.value,n2.value);
+            });
+        });
+    </script>
+</body>
+</html>
