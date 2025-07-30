@@ -12,7 +12,7 @@ namespace web.Http
     {
         public Action<HttpRequest,HttpResponse> PageNotFoundHandler { get; set; }
         public Action<HttpRequest,HttpResponse> ServerErrorHandler { get; set; }
-        private Dictionary<string,Action<HttpRequest,HttpResponse>> Handlers { get; set; }
+        private Dictionary<string,Func<HttpRequest,HttpResponse,bool>> Handlers { get; set; }
         private readonly Middleware middleware;
         public Server()
         {
@@ -27,16 +27,22 @@ namespace web.Http
                 LogError("Server Error: 500 - " + req.Path);
             };
             middleware = new Middleware();
-            Handlers = new Dictionary<string, Action<HttpRequest,HttpResponse>>();
+            Handlers = new Dictionary<string, Func<HttpRequest,HttpResponse,bool>>();
             Handlers["GET:/favicon.ico"] = (req,res) => {
                 LogWarning("no favicon.... just return empty response");
                 res.Write(new byte[]{});
+                return true;
             };
         }
 
         public void AddMiddleware(Action<HttpRequest,HttpResponse> action)
         {
             middleware.Actions.Add(action);
+        }
+
+        public void AddRoute(string name, Func<HttpRequest,HttpResponse,bool> predicate)
+        {
+            Handlers[name] = predicate;
         }
 
         public static void LogInfo(string message)
@@ -82,15 +88,18 @@ namespace web.Http
         private bool IsHandled(HttpRequest request, HttpResponse response)
         {
             var route = string.Format("{0}:{1}",request.Method,request.Path);
-            if(Handlers.ContainsKey(route))
+            if(!Handlers.ContainsKey(route)) return false;
+            if(string.IsNullOrEmpty(request.SessionId))
             {
-                Handlers[route](request,response);
-                return true;
+                request.Path = "/assets/html/user/login.html";
+                return IsStaticFile(request,response);
             }
-            return false;
+            return Handlers[route](request,response);
         }
 
-        public void Run(int port = 80, int maxRetry = 100)
+        private static object _sync = new object();
+
+        public void Run(string address="127.0.0.1",int port = 80, int maxRetry = 100)
         {
             if(port==0) port=80;
             Start:
@@ -102,10 +111,9 @@ namespace web.Http
             TcpListener server = null;
             try
             {
-                IPAddress ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(x=> x.AddressFamily.ToString()=="InterNetwork");
-                // System.Console.WriteLine(string.Join("\n|\n",Dns.GetHostEntry(Dns.GetHostName()).AddressList.Select(x=>x.ToString()+" :::: "+x.AddressFamily)));
-                IPEndPoint ipLocalEndPoint = new IPEndPoint(IPAddress.Any, port);
-                LogInfo(string.Format("Basic web server is running on url http://{0}:{1}/",ipAddress,ipLocalEndPoint.Port));
+                IPAddress ipAddress = IPAddress.Parse(address);
+                IPEndPoint ipLocalEndPoint = new IPEndPoint(ipAddress, port);
+                LogInfo(string.Format("Basic web server is running on url http://{0}:{1}/",ipLocalEndPoint.Address,ipLocalEndPoint.Port));
                 server = new TcpListener(ipLocalEndPoint);
                 server.Start();
                 while(true)
@@ -113,39 +121,42 @@ namespace web.Http
                     // Console.Write("Waiting for a connection... ");
                     using (TcpClient client = server.AcceptTcpClient())
                     {
-                        // Log("Connected!");
-                        using (NetworkStream stream = client.GetStream())
+                        lock(_sync)
                         {
-
-                            HttpRequest req = null;
-                            HttpResponse res = null;
-
-                            try
+                            // Log("Connected!");
+                            using (NetworkStream stream = client.GetStream())
                             {
-                                byte[] buffer = new byte[1024];
-                                stream.Read(buffer,0,buffer.Length);
-                                string request = Encoding.UTF8.GetString(buffer);
-                                req = new HttpRequest(request);
-                                res = new HttpResponse(stream);                            
 
-                                foreach (var action in middleware.Actions)
-                                    action(req,res);
+                                HttpRequest req = null;
+                                HttpResponse res = null;
 
-                                if(req.Path=="/") req.Path = "/assets/html/home.html";
-                                string route = string.Format("{0}:{1}",req.Method,req.Path);
-                                if(!(IsStaticFile(req, res) || IsHandled(req, res)))
-                                    PageNotFoundHandler(req,res);
-                                else
+                                try
+                                {
+                                    byte[] buffer = new byte[1024];
+                                    stream.Read(buffer, 0, buffer.Length);
+                                    string request = Encoding.UTF8.GetString(buffer);
+                                    req = new HttpRequest(request);
+                                    res = new HttpResponse(stream, req.SessionId);
+
+                                    foreach (var action in middleware.Actions)
+                                        action(req, res);
+
+                                    if (req.Path == "/") req.Path = "/assets/html/home.html";
+                                    string route = string.Format("{0}:{1}", req.Method, req.Path);
                                     LogInfo(route);
-                            }
-                            catch(Exception ex)
-                            {
-                                LogError("TCP/LISTENER ERROR: "+ex.ToString());
-                                ServerErrorHandler(req,res);
-                            }
-                            finally
-                            {
-                                stream.Flush();
+                                    if (!(IsStaticFile(req, res) || IsHandled(req, res))) {
+                                        PageNotFoundHandler(req, res);
+                                    }
+                                }
+                                catch(Exception ex)
+                                {
+                                    LogError(string.Format("TCP/LISTENER ERROR: {0} : {1}",req.Path,ex.ToString()));
+                                    ServerErrorHandler(req,res);
+                                }
+                                finally
+                                {
+                                    stream.Flush();
+                                }
                             }
                         }
                     }

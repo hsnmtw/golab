@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
+using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System;
 
@@ -85,21 +86,82 @@ namespace web.Http
             }
             return false;
         }
-        private bool IsHandled(HttpRequest request, HttpResponse response)
+
+        private bool AuthorizationHandled(HttpRequest request, HttpResponse response)
         {
-            var route = string.Format("{0}:{1}",request.Method,request.Path);
-            if(!Handlers.ContainsKey(route)) return false;
-            if(string.IsNullOrEmpty(request.SessionId))
+            if(0>1 && string.IsNullOrEmpty(request.SessionId))
             {
                 request.Path = "/assets/html/user/login.html";
                 return IsStaticFile(request,response);
             }
+            return false;
+        }
+
+        private bool IsHandled(HttpRequest request, HttpResponse response)
+        {
+            var route = string.Format("{0}:{1}",request.Method,request.Path);
+            if(!Handlers.ContainsKey(route)) return false;
+            if(AuthorizationHandled(request, response)) return true;
             return Handlers[route](request,response);
+        }
+
+        private const string CSC = @"c:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe";
+        private static readonly string WORKING_DIRECTORY = new DirectoryInfo(".\\assets").FullName;
+
+        private static string Execute(string executable, string arguments=""){
+            var process = Process.Start(new ProcessStartInfo { 
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                ErrorDialog = false,
+                LoadUserProfile = true,
+                WorkingDirectory = WORKING_DIRECTORY,
+                FileName = executable,
+                Arguments = arguments
+            });
+            process.WaitForExit();
+            string result = process.StandardOutput.ReadToEnd();
+            if(process.ExitCode != 0){
+                LogError("ERROR: "+process.StandardError.ReadToEnd()+" | " + result);
+            }
+            return result;
+        }
+
+        private void AddCompiledScriptsRoutes(bool build, string folder)
+        {
+            LogInfo(string.Format("Exploring folder: {0}", folder));
+            foreach(var subfolder in Directory.GetDirectories(folder))
+            {
+                AddCompiledScriptsRoutes(build, subfolder);
+                foreach (var file in Directory.GetFiles(subfolder,"*.cs"))
+                {
+                    //compile script using csc to bin folder
+                    string binary = file.Replace("pages", "bin").Replace(".cs", ".bin");
+                    string route = "/pages"+ file.Substring(0, file.Length - 3).Split(new[] { "pages" }, StringSplitOptions.None).Last().Replace('\\', '/');
+
+                    if (build)
+                    {
+                        string args = string.Join(" ", new[] {CSC, "/target:exe", "/platform:x64", "/nologo", "/noconfig", "/fullpaths", "/langversion:5", "/optimize+", "/debug-", "/out:" + binary, file });
+                        LogInfo(string.Format("[{2}] CSC: {0} => {1}", file, binary, route));
+                        // Console.WriteLine("\n{0}\n", args);
+                        string bindir = Path.GetDirectoryName(binary);
+                        if (!Directory.Exists(bindir)) Directory.CreateDirectory(bindir);
+                        Execute(@"c:\windows\system32\cmd.exe", "/c " + '"' + args + '"');
+                    }
+                    Handlers["GET:" + route] = (req, res) => {
+                        LogInfo(string.Format("invoking: {0}", binary));
+                        res.Write(Execute(binary));
+                        return true;
+                    };
+                }
+            }
         }
 
         private static object _sync = new object();
 
-        public void Run(string address="127.0.0.1",int port = 80, int maxRetry = 100)
+        public void Run(string address="127.0.0.1",int port = 80, int maxRetry = 100, bool build=false)
         {
             if(port==0) port=80;
             Start:
@@ -108,6 +170,7 @@ namespace web.Http
                 LogError("Exceeded number of max-retry, shutting down");
                 return;
             }
+            AddCompiledScriptsRoutes(build, string.Format("{0}\\pages",WORKING_DIRECTORY));
             TcpListener server = null;
             try
             {
@@ -123,7 +186,8 @@ namespace web.Http
                     {
                         lock(_sync)
                         {
-                            // Log("Connected!");
+                            // Log("Connected!"); // multi-thraded server
+
                             using (NetworkStream stream = client.GetStream())
                             {
 
@@ -135,6 +199,7 @@ namespace web.Http
                                     byte[] buffer = new byte[1024];
                                     stream.Read(buffer, 0, buffer.Length);
                                     string request = Encoding.UTF8.GetString(buffer);
+                                
                                     req = new HttpRequest(request);
                                     res = new HttpResponse(stream, req.SessionId);
 
@@ -144,14 +209,16 @@ namespace web.Http
                                     if (req.Path == "/") req.Path = "/assets/html/home.html";
                                     string route = string.Format("{0}:{1}", req.Method, req.Path);
                                     LogInfo(route);
-                                    if (!(IsStaticFile(req, res) || IsHandled(req, res))) {
+                                    if (!(IsStaticFile(req, res) || IsHandled(req, res)))
+                                    {
                                         PageNotFoundHandler(req, res);
                                     }
+                                    
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
-                                    LogError(string.Format("TCP/LISTENER ERROR: {0} : {1}",req.Path,ex.ToString()));
-                                    ServerErrorHandler(req,res);
+                                    LogError(string.Format("TCP/LISTENER ERROR: {0} : {1}", req.Path, ex.ToString()));
+                                    ServerErrorHandler(req, res);
                                 }
                                 finally
                                 {

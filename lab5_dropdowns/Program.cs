@@ -21,7 +21,7 @@ namespace web
             //    if(req.Cookie("session_id") == "" && !req.Path.StartsWith("/assets"))
             //        req.Path = "/assets/html/user/login.html";
             //});
-            server.Run( port, maxRetry: 10 );
+            server.Run("127.0.0.1", port, maxRetry: 10 );
         }
     }
 }

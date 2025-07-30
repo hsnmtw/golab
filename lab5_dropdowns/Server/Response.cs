@@ -8,6 +8,7 @@ namespace web.Http
 {
     public class HttpResponse
     {
+        private const string TOKEN = "9j21iox7";
         public const string HTTP_RESPONSE_STATUS_CODE_100 = "Continue";
         public const string HTTP_RESPONSE_STATUS_CODE_101 = "Switching Protocols";
         public const string HTTP_RESPONSE_STATUS_CODE_200 = "OK";
@@ -45,7 +46,7 @@ namespace web.Http
         public const string HTTP_RESPONSE_STATUS_CODE_504 = "Gateway Timeout";
         public const string HTTP_RESPONSE_STATUS_CODE_505 = "HTTP Version Not Supported";
 
-        private static readonly Dictionary<string,string> _statusCodes = new Dictionary<string, string>{
+        private static readonly Dictionary<string, string> _statusCodes = new Dictionary<string, string>{
             {"100",HTTP_RESPONSE_STATUS_CODE_100},
             {"101",HTTP_RESPONSE_STATUS_CODE_101},
             {"200",HTTP_RESPONSE_STATUS_CODE_200},
@@ -83,23 +84,30 @@ namespace web.Http
             {"504",HTTP_RESPONSE_STATUS_CODE_504},
             {"505",HTTP_RESPONSE_STATUS_CODE_505},
         };
-        
+
         public bool IsFlushed { get; private set; }
-        private readonly Dictionary<string,string> _headers = new Dictionary<string,string>();        
+        private readonly Dictionary<string, string> _headers = new Dictionary<string, string>();
         private readonly Stream _stream;
-        public HttpResponse(Stream stream)
+        private readonly string _sessionId;
+        public HttpResponse(Stream stream, string sessionId)
         {
             _stream = stream;
+            _sessionId = sessionId;
+            SetCookie("SESSION_ID", _sessionId, DateTime.Now.AddHours(3));
         }
-      
+
         public void SetHeader(string name, string value)
         {
-            _headers[string.Format("{0}",name).Trim().ToLower()] = value;
+            string key = string.Format("{0}", name).Trim().ToLower();
+            if (_headers.ContainsKey(key)) return;
+            _headers[key] = value;
         }
 
         public void SetCookie(string name, string value, DateTime expiry)
         {
-            SetHeader("Set-Cookie", string.Format("{0}={1}; Expires={2}; Secure; HttpOnly; Path=/",name,value,expiry));
+            //append server-specific token tat end of value to prevent attack
+            value = string.Format("{0}-{1}", value, TOKEN);
+            SetHeader("Set-Cookie", string.Format("{0}={1}; Expires={2}; Secure; HttpOnly; Path=/", name, value, expiry));
         }
 
         public void Write(string content)
@@ -109,16 +117,14 @@ namespace web.Http
 
         public static string GetLast(string[] items)
         {
-            if(items.Length>0) return items[items.Length-1];
+            if (items.Length > 0) return items[items.Length - 1];
             return "";
         }
 
-        public void WriteFile(string path)
+        public static string GetContentType(string path)
         {
-            if(IsFlushed) return;
-            if(!_headers.ContainsKey("status")) SetHeader("status","200");
-
             string contentType = "text/plain";
+            if (string.IsNullOrEmpty(path)) return contentType;
             string ext = GetLast(path.Split('.'));
             switch (ext)
             {
@@ -135,6 +141,7 @@ namespace web.Http
                 case "rtf"  :
                 case "pdf"  :
                 case "xml"  :
+                case "wasm" :
                 case "json" : contentType = "application/"+ext; break;
                 case "txt"  :
                 case "xslt" :
@@ -160,20 +167,14 @@ namespace web.Http
                 case "ppt"  :
                 case "pptx" : contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; break;
             }
-            using (var fs = File.OpenRead(path))
-            {
-                string headers = 
-                "HTTP/1.1 " + _headers["status"] + " " + _statusCodes[_headers["status"]]  + "\r\n"+
-                "Content-Type: " + contentType + "\r\n"+
-                "Content-Length: " + fs.Length + "\r\n"+
-                "\r\n";
-                var _buffer = Encoding.UTF8.GetBytes(headers);
-                _stream.Write(_buffer,0,_buffer.Length);
-                WriteTo(fs,_stream);
-                _stream.Flush();
-                fs.Close();
-            }
-            IsFlushed = true;
+            return contentType;
+        }
+
+        public void WriteFile(string path)
+        {
+            if(IsFlushed) return;
+            SetHeader("Content-Type", GetContentType(path));
+            Write(File.ReadAllBytes(path));
         }
 
         private static void WriteTo(Stream source, Stream target)
@@ -184,26 +185,22 @@ namespace web.Http
                 target.Write(buffer, 0, n);
         }
 
-
         public void Write(byte[] buffer)
         {
             if(IsFlushed) return;
-            if(!_headers.ContainsKey("status")) _headers["status"] = "200";
-            //_headers["content-length"] = buffer.Length.ToString();
-            var _buffer = Encoding.UTF8.GetBytes(
-                "HTTP/1.1 " + _headers["status"] + " " + _statusCodes[_headers["status"]]  + "\r\n"
-            );
-            _stream.Write(_buffer,0,_buffer.Length);
-            foreach(var k in _headers.Keys)
-            {
-                _buffer = Encoding.UTF8.GetBytes(string.Format("{0}: {1}\r\n", k, _headers[k]));
-                _stream.Write(_buffer,0,_buffer.Length);
-            }
+            SetHeader("status","200");
+            SetHeader("Content-Type", "text/html");
+            SetHeader("Content-Length", buffer.Length.ToString());            
+            string headers = 
+                    string.Format("HTTP/1.1 {0} {1}\r\n{2}\r\n\r\n", 
+                        _headers["status"], 
+                        _statusCodes[_headers["status"]], 
+                        string.Join("\r\n", _headers.Select(x => string.Format("{0}: {1}", x.Key, x.Value)))
+                        );
 
-            _buffer = Encoding.UTF8.GetBytes("\r\n\r\n");
+            var _buffer = Encoding.UTF8.GetBytes(headers);
             _stream.Write(_buffer,0,_buffer.Length);
-
-            _stream.Write(buffer,0,buffer.Length);
+            _stream.Write( buffer,0, buffer.Length);
             _stream.Flush();
             IsFlushed = true;
         }

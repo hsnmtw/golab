@@ -29,6 +29,7 @@ namespace web.Http
 
     public class HttpRequest
     {
+        private const string TOKEN = "9j21iox7";
         private HttpRequestMethod _method;
         private string _path = "";
         private string _body = "";
@@ -36,6 +37,8 @@ namespace web.Http
         private readonly Dictionary<string,string> _form = new Dictionary<string,string>();
         private readonly Dictionary<string,string> _cookies = new Dictionary<string,string>();
         private readonly Dictionary<string,string> _headers = new Dictionary<string,string>();
+
+        public string SessionId { get { return Cookie("session_id"); } }
 
         public HttpRequest(string requestText)
         {
@@ -74,8 +77,9 @@ namespace web.Http
             for(int i=0;i<parts.Length;i++)
             {
                 var kv = new StringKeyValue(parts[i],'=');
-                if(string.IsNullOrEmpty(kv.Key)) continue;
-                _cookies[kv.Key] = kv.Value;
+                if(string.IsNullOrEmpty(kv.Key) || string.IsNullOrEmpty(kv.Value)) continue;
+                if(!kv.Value.EndsWith(TOKEN)) continue;
+                _cookies[kv.Key] = kv.Value.Substring(0,kv.Value.Length - (1+TOKEN.Length));
             }
         }
 

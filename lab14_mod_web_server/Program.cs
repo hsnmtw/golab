@@ -21,7 +21,15 @@ namespace web
             //    if(req.Cookie("session_id") == "" && !req.Path.StartsWith("/assets"))
             //        req.Path = "/assets/html/user/login.html";
             //});
-            server.Run( "127.0.0.1", port, maxRetry: 10 );
+            server.AddRoute("GET:/test", (req,res) => {
+                res.Write("test");
+                return true;
+            });
+            server.Run( 
+                address: "127.0.0.1", 
+                port: port, 
+                maxRetry: 10, 
+                build: args.Length>0 && args[0].ToLower()=="build" );
         }
     }
 }
