@@ -16,14 +16,8 @@ const COLORS = [
     '#FFA500',
     '#FF4500',
     '#DA70D6',
-    '#EEE8AA',
-    '#98FB98',
-    '#AFEEEE',
     '#DB7093',
     '#CD853F',
-    '#FFC0CB',
-    '#DDA0DD',
-    '#B0E0E6',
     '#800080',
     '#663399',
     '#FF0000',
@@ -31,25 +25,10 @@ const COLORS = [
     '#4169E1',
     '#8B4513',
     '#FA8072',
-    '#F4A460',
-    '#2E8B57',
-    '#FFF5EE',
-    '#A0522D',
-    '#C0C0C0',
-    '#87CEEB',
-    '#6A5ACD',
-    '#708090',
-    '#708090',
-    '#00FF7F',
-    '#4682B4',
-    '#D2B48C',
     '#008080',
     '#D8BFD8',
     '#FF6347',
     '#40E0D0',
-    '#EE82EE',
-    '#F5DEB3',
-    '#FFFF00',
     '#9ACD32',
 ];
 
@@ -81,6 +60,19 @@ class Box {
         this.y += this.dy;    
         drawRect(this.x, this.y, this.w, this.h, this.color);
     }
+    
+    collide(box) {
+        const _x = this.x + this.dx;
+        const _y = this.y + this.dy;
+        if ((_x > box.x && _x < box.x + box.w) && (_y > box.y && _y < box.y + box.h)) {
+            this.dx *= -1;
+            this.dy *= -1;
+            box.dx *= -1;
+            box.dy *= -1;
+            return true;
+        }
+        return false;
+    }
 }
 
 function drawRect(x, y, w, h, color) {
@@ -97,26 +89,30 @@ function endDrawing() {
     
 }
 
-function getRandomInt(min, max) {
+function random(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function randomBox() {
-    const x = getRandomInt(10,CANVAS_WIDTH/2);
-    const y = getRandomInt(10,CANVAS_WIDTH/2);
-    const w = getRandomInt(10,CANVAS_WIDTH/9);
-    const color = COLORS[ getRandomInt(0,COLORS.length*2) % COLORS.length ];
+    const w = random(10,CANVAS_WIDTH/9);
+    const x = random(10,CANVAS_WIDTH - w);
+    const y = random(10,CANVAS_WIDTH - w);
+    const color = COLORS[ random(0,COLORS.length-1) ];
     return new Box(x,y,w,w,color);
 }
 
 async function main() {
-    let boxes = [0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10].map(randomBox);
+    let boxes = [1,2,3,4,2,3,4,2,3,4,2,3,4,2,3,4].map(randomBox);
     for (; ;) {
         beginDrawing();
-        //drawRect(box.x, box.y, "red");
-        boxes.forEach(x=>x.move());
+        boxes.forEach(box => { 
+            box.move();
+            for(let other of boxes){
+                box !== other && box.collide(other);
+            }
+        });
         endDrawing();   
         await new Promise(r => setTimeout(r, DELAY));
     }
