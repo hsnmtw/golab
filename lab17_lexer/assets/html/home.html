@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/css/main.css">
+    </head>
+    <body>
+        <div class="flex spaced centered">
+            <h1>Basic Lexer</h1>
+            <h4 id="stats">0</h4>
+        </div>
+        <div class="grid-2 gap-1 flex-grow">
+            <textarea name="source"></textarea>
+            <div class="grid">
+                <div class="flex-col">
+                    <label>Expected</label>
+                    <textarea name="expected"></textarea>
+                </div>
+                <div class="flex-col">
+                    <label>Actual</label>
+                    <textarea name="target"></textarea>
+                </div>
+            </div>
+        </div>
+        <script defer src="/assets/js/lexer.js"></script>
+    </body>
+</html>
