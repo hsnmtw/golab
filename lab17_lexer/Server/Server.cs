@@ -1,11 +1,14 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 
 namespace web.Http
 {
@@ -34,6 +37,15 @@ namespace web.Http
                 res.Write(new byte[]{});
                 return true;
             };
+            Handlers["GET:/multi-threading-test"] = MultiThreadingTest;
+        }
+
+        public bool MultiThreadingTest(HttpRequest req,HttpResponse res)
+        {
+            var result = File.ReadAllText("./assets/html/multi-threading-test.html"); // simulate I/O
+            Task.Delay(new Random().Next(10, 100)).Wait();
+            res.Write(result);
+            return true;
         }
 
         public void AddMiddleware(Action<HttpRequest,HttpResponse> action)
