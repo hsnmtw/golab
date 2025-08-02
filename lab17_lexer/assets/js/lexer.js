@@ -128,8 +128,9 @@ class Lexer {
             if (Characters.isAlpha(first)) {
                 //reading the name of the function 
                 let xretry = 1000;
-                while (!this.#done() && Characters.isAlphaNumeric(this.#next()) && --xretry>0);
-                const value = this.#source.substring(index, this.#currentIndex - 1);
+                while (!this.#done() && Characters.isAlphaNumeric(this.#next()) && --xretry > 0);
+                this.#currentIndex -= 1;
+                const value = this.#source.substring(index, this.#currentIndex);
                 const type = tokens.length === 0
                           || tokens[tokens.length - 1].type === TOKEN_CLCL
                             ? TOKEN_FUNC
