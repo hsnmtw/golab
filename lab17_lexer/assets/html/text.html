@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.8"> -->
+    <title>Document</title>
+    <style>
+        *,*::after,*::before { box-sizing: border-box; }
+        body {display: flex; flex-direction: column;min-height: 100vh;margin: 0;padding: 1em; gap: 1em;}
+        h1,h2,h3,h4,h5,h6 { margin: 0; }
+        canvas {
+            outline: 1px solid salmon;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graphics Edit Control</h1>
+    </div>
+    <canvas></canvas>    
+    <script defer>
+        const canvas = document.querySelector('canvas');
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        let buffer = "PLEASE ENTER YOUR NAME: "; 
+        let caret = "\u25AF";
+        let cursorIndex = 0;
+        setInterval(()=>{
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+
+            //if(buffer.length===0) buffer = "\u25AE";
+            caret = ( caret === "\u25AF" ? "\u25AE" : "\u25AF");
+            ctx.fillStyle = "white";
+            ctx.fillText(buffer+caret,10,10);
+        },250)
+
+        document.addEventListener("keydown", e => {
+            // console.log(e)
+            if(e.keyCode >64 && e.keyCode<91)
+                buffer += e.key
+        });
+    </script>
+</body>
+</html>

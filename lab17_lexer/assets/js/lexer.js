@@ -182,3 +182,28 @@ document.addEventListener("DOMContentLoaded", _ => {
     onChange();
     source.addEventListener("input", onChange);
 });
+
+
+function testMultiThreading() {
+    window.n = 0;
+    window.e = 0;
+    const options = {
+        method: "get",
+        headers: {
+            "Content-Type": "text/plain",
+            "Accepts": "text/plain",
+        }
+    };
+    for (let m = 0; m < 1000; ++m){
+        //prevent caching by requesting new args because it is a get request
+        fetch('/multi-threading-test?_='+encodeURIComponent(999999999999*Math.random()|0)+'&d='+encodeURIComponent(new Date().getTime()),options)
+            .then(x => x.text())
+            .then(x => {
+                setTimeout(() => {
+                    if (x.trim() === 'Success !') { window.n++; } else { window.e++; }
+                    console.log(`Success = ${window.n} / Failure = ${window.e}`);
+                }, 1);
+            })
+            .catch(_ => { window.e++; });
+    }
+}
