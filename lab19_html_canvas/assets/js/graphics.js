@@ -6,7 +6,7 @@ const CANVAS_WIDTH = 220;
 const CANVAS_HEIGHT = 120;
 const WIDTH = 10;
 const HEIGHT = 10;
-const DELAY = 15;
+const DELAY = 5;
 
 
 const COLORS = [
@@ -110,31 +110,34 @@ class Box {
 }
 
 function drawRect(x, y, w, h, color) {
+	
     ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-/*
+	const m = 1//((100 * Math.random()) | 0);
+	if(m > 0 && m < 33)
+	{
+		ctx.fillRect(x, y, w, h);
+	}
+	else if(m > 32 && m < 66){
 		ctx.beginPath();
 		ctx.arc(x,y,h,0,Math.PI*2,true);
 		ctx.closePath();
 		ctx.fill();
-*/
 
-/*
-            var path=new Path2D();
-            path.moveTo(x,y);
-            path.lineTo(x+(w/2),   y+(h/2)-50);
-            path.lineTo(x+(w/2)-50,y+h/2);
-            path.lineTo(x,y);
-            ctx.fill(path);
-        
-    
-*/
+	}else{
+		var path=new Path2D();
+		path.moveTo(x,y);
+		path.lineTo(x,   y-5);
+		path.lineTo(x-5,y);
+		path.lineTo(x,y);
+		ctx.fill(path);				
+	}
 	
 }
 
 function beginDrawing() {
-    ctx.fillStyle = "#181818ff";
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	ctx.fillStyle = "#181818ff";
+	//ctx.fillStyle = COLORS[((Math.random()*10000)|0)%COLORS.length];
+	ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 }
 
 function endDrawing() {
@@ -148,7 +151,7 @@ function random(min, max) {
 }
 
 function randomBox() {
-    const w = 3 //random(10,CANVAS_WIDTH/9);
+    const w = random(10,CANVAS_WIDTH/9);
     const x = random(10,CANVAS_WIDTH - w);
     const y = random(10,CANVAS_WIDTH - w);
     const color = COLORS[ random(0,COLORS.length-1) ];
@@ -156,10 +159,12 @@ function randomBox() {
 }
 
 async function main() {
-    let boxes = [1,2,3,4,5,6,7,8,9,0].map(randomBox);
+    let boxes = [
+		1,2,3,4,5,6,7,8,9,0,
+	].map(randomBox);
 	
     for (let i = 0; i< 1_000_000 ;++i) {
-        if(i%100 === 0) beginDrawing();
+        beginDrawing();
 		for(let box of boxes){
 			for(let other of boxes){
 				box.id !== other.id && box.collide(other);
