@@ -1,0 +1,44 @@
+*,*::after,*::before {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: cornsilk;
+}
+
+form {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 1rem;
+    max-width: 300px;
+}
+
+.smart-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.smart-container:not(:focus-within) .smart-wrapper {
+    display: none;
+}
+
+.smart-wrapper {
+    position: relative;
+}
+
+.smart-options {
+    border: 1px solid #333;
+    position: absolute;
+    background-color: #fff;
+    width:100%;
+}
+
+.smart-option-value {
+    padding-block: 0.3rem;
+    padding-inline: 0.5rem;
+    cursor: pointer;
+}
+
+.smart-option-value:hover {
+    background-color : orange;
+}

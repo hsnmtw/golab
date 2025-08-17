@@ -91,6 +91,5 @@ function modernizeSelect(selector){
             });
             
             init()
-            
     })
 }
