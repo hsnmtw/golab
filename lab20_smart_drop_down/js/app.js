@@ -1,6 +1,7 @@
-function OptionValue(val,txt){
+function OptionValue(val,txt,dsply){
     this.value = val;
     this.text = txt ?? val;
+    this.display = dsply ?? txt ?? val;
 }
 
 function SmartDropDown(el, formatter) {
@@ -30,11 +31,15 @@ function SmartDropDown(el, formatter) {
         build(filtered);
     });
 
+    //TODO: add key up/down (cyclic) to select options
+    //TODO: show current selected option highlighted
+
 
     fakeText.addEventListener("change", e => {
         const filtered = optionValues.filter(x => x.text.containsInvariant(e.target.value));
         if(filtered.length !== 1) {
             e.target.value = "";
+            build(optionValues);
             return;
         }
         e.target.value = filtered[0].text;
@@ -49,11 +54,12 @@ function SmartDropDown(el, formatter) {
     });
 
     
-    function optionTemplate(v,t){
+    function optionTemplate(ov){
         return `
             <tr tabIndex="1" 
-                 data-value="${v}" 
-                 class="smart-option-value">${t}</tr>
+                 data-value="${ov.value}" 
+                 data-text="${ov.text}"
+                 class="smart-option-value">${ov.display}</tr>
         `;
     }
 
@@ -64,17 +70,17 @@ function SmartDropDown(el, formatter) {
 
     function build(ov){
         ov ??= optionValues ?? [];
-        options.innerHTML = "<table>"+ov.map(x=>optionTemplate(x.value,x.text)).join("")+"</table>";
+        options.innerHTML = "<table>"+ov.map(optionTemplate).join("")+"</table>";
         options.querySelectorAll('.smart-option-value').forEach(o => o.addEventListener("click", e => {
-            fakeText.value = e.target.textContent.trim();
-            el.value = e.target.dataset.value;
+            fakeText.value = o.dataset.text.trim();
+            el.value = o.dataset.value.trim();
             el.dataset.selected=1;
         }));
     }
 
     //TODO: sort items 
     function addOption(v,t){
-        optionValues.push(new OptionValue(v,formatText(t)));
+        optionValues.push(new OptionValue(v,t,formatText(t)));
         return this;
     }
 
@@ -105,19 +111,19 @@ function form2object(form){
 
 document.querySelector('button[type="button"]').addEventListener("click",onButtonClick);
 const input = document.querySelector('input.smart');
-const sdd = new SmartDropDown(input, x => `<td>${x.en}</td><td>${x.ar}</td>`)
-        .addOption("Riyadh"  , { en: "Riyadh" , ar: "الرياض"  })
-        .addOption("Dammam"  , { en: "Dammam" , ar: "الدمام"  })
-        .addOption("Jeddah"  , { en: "Jeddah" , ar: "جدة"     })
-        .addOption("Hofuf"   , { en: "Hofuf"  , ar: "الهفوف"  })
-        .addOption("Hail"    , { en: "Hail"   , ar: "حائل"    })
-        .addOption("Makka"   , { en: "Makka"  , ar: "مكة"     })
-        .addOption("Tabuk"   , { en: "Tabuk"  , ar: "تبوك"    })
-        .addOption("Arar"    , { en: "Arar"   , ar: "عرعر"    })
-        .addOption("Qatif"   , { en: "Qatif"  , ar: "القطيف"  })
-        .addOption("Dhahran" , { en: "Dhahran", ar: "الظهران" })
-        .addOption("Jaizan"  , { en: "Jaizan" , ar: "جيزان"   })
-        .addOption("Qasim"   , { en: "Qasim"  , ar: "القصيم"  })
-        .addOption("Khobar"  , { en: "Khobar" , ar: "الخبر"   })
-        .addOption("Bqaiq"   , { en: "Bqaiq"  , ar: "بقيق"    })
+const sdd = new SmartDropDown(input, x => `<td>${x.split(/[|]/g).join('</td><td>')}</td>`)
+        .addOption("Riyadh"  , "RUH | Riyadh   | الرياض ")
+        .addOption("Dammam"  , "DMM | Dammam   | الدمام ")
+        .addOption("Jeddah"  , "JED | Jeddah   | جدة    ")
+        .addOption("Hofuf"   , "HOF | Hofuf    | الهفوف ")
+        .addOption("Hail"    , "HAL | Hail     | حائل   ")
+        .addOption("Makka"   , "MAK | Makka    | مكة    ")
+        .addOption("Tabuk"   , "TBK | Tabuk    | تبوك   ")
+        .addOption("Arar"    , "ARR | Arar     | عرعر   ")
+        .addOption("Qatif"   , "QTF | Qatif    | القطيف ")
+        .addOption("Dhahran" , "DHR | Dhahran  | الظهران")
+        .addOption("Jaizan"  , "JZN | Jaizan   | جيزان  ")
+        .addOption("Qasim"   , "QSM | Qasim    | القصيم ")
+        .addOption("Khobar"  , "KHB | Khobar   | الخبر  ")
+        .addOption("Bqaiq"   , "BAQ | Bqaiq    | بقيق   ")
         .build();
