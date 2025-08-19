@@ -14,7 +14,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub async fn is_static_file(mut self : HttpResponse) -> bool {
+    pub async fn is_static_file(&mut self) -> bool {
         if &self.request.path == "/" {
             self.request.path = String::from(HOME_PAGE);
         }
@@ -32,11 +32,13 @@ impl HttpResponse {
         return true;
     }
 
-    pub async fn handle(mut self : HttpResponse) -> bool {
+    pub async fn handle(&mut self) -> bool {
         if self.is_static_file().await {
             return true;
         }
-        return false;
+        //let _ = self.stream.write(ERR_404.as_bytes()).await;
+        self.request.path = String::from("/assets/html/404.html");
+        return self.is_static_file().await;
     }
     
     pub(crate) fn build(stream: TcpStream, request: HttpRequest) -> HttpResponse {

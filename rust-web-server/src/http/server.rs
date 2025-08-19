@@ -1,4 +1,4 @@
-use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::TcpListener};
+use tokio::{io::AsyncReadExt, net::TcpListener};
 
 use crate::http::{request::HttpRequest, response::HttpResponse};
 
@@ -23,7 +23,7 @@ impl HttpServer {
                   match stream.read(&mut buf).await {
                     Ok(_) => { 
                       let request = HttpRequest::from(&String::from_utf8_lossy(&buf)); 
-                      let response = HttpResponse::build(stream,request);
+                      let mut response = HttpResponse::build(stream,request);
                       response.handle().await;
                       // let _ = stream.write(&response).await;
                     }

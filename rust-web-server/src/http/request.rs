@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::{self, File}, io::Read};
+use std::collections::HashMap;
 
 const GET       : &'static str = "GET";
 const POST      : &'static str = "POST";
@@ -7,6 +7,7 @@ const PATCH     : &'static str = "PATCH";
 const PUT       : &'static str = "PUT";
 
 pub enum HttpMethod { UNKNOWN,GET,POST,DELETE,PATCH,PUT }
+
 pub struct HttpRequest {
   pub method : HttpMethod,
   pub path   : String,
