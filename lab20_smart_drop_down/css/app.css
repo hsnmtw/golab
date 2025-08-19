@@ -23,6 +23,10 @@ form {
     display: none;
 }
 
+.smart-option-value.active {
+    background-color: dodgerblue;
+}
+
 .smart-wrapper {
     position: relative;
     z-index: 5;

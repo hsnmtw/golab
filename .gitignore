@@ -34,7 +34,7 @@ bin/
 obj/
 bin/*
 obj/*
-
+target/
 
 # Editor/IDE
 # .idea/

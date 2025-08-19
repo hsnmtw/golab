@@ -27,15 +27,22 @@ function SmartDropDown(el, formatter) {
 
     //TODO: hide vs rebuild
     fakeText.addEventListener("input", e => {
+        el.value = "";
         const filtered = optionValues.filter(x => x.text.containsInvariant(e.target.value));
         build(filtered);
+        if(filtered.length === 1){
+            el.value = filtered[0].value;
+            fakeText.value = filtered[0].text;
+        }
+        showCurrentSelection();
     });
 
     //TODO: add key up/down (cyclic) to select options
-    //TODO: show current selected option highlighted
+    
 
 
     fakeText.addEventListener("change", e => {
+        el.value = "";
         const filtered = optionValues.filter(x => x.text.containsInvariant(e.target.value));
         if(filtered.length !== 1) {
             e.target.value = "";
@@ -45,12 +52,20 @@ function SmartDropDown(el, formatter) {
         e.target.value = filtered[0].text;
         el.value = filtered[0].value;   
         el.dataset.selected = 1;
-        console.log("change",el.dataset.selected)
     });
     
     fakeText.addEventListener("focus",_=>{ 
         el.dataset.selected=0; 
-        console.log("focus",el.dataset.selected);
+        showCurrentSelection();
+    });
+
+    fakeText.addEventListener("blur",_=>{
+        for(let i=0;i<optionValues.length;++i){
+            if(optionValues[i].value === el.value) {
+                fakeText.value = optionValues[i].text;
+                break;
+            }
+        }
     });
 
     
@@ -76,15 +91,38 @@ function SmartDropDown(el, formatter) {
             el.value = o.dataset.value.trim();
             el.dataset.selected=1;
         }));
+        showCurrentSelection();
     }
 
-    //TODO: sort items 
+    function sort() { 
+        //sorting by display text
+        optionValues.sort((a,b)=>{
+            return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+        });
+    }
     function addOption(v,t){
-        optionValues.push(new OptionValue(v,t,formatText(t)));
+        optionValues.push(new OptionValue(v,t.trim(),formatText(t)));
         return this;
     }
 
-    return {addOption,build,formatText};
+    function setOptions(listOfOptions) {
+        if(!listOfOptions || typeof listOfOptions !== "object" || !Array.isArray(listOfOptions)) return;
+        for(let i=0;i<listOfOptions.length;++i){
+            addOption(listOfOptions[i][0], listOfOptions[i][1]);
+        }
+    }
+
+    //TODO: show current selected option highlighted
+    function showCurrentSelection(){
+        options.querySelectorAll(`.smart-option-value`).forEach((o,idx) => {
+            if(o.value === el.value) o.classList.add("active");
+            else o.classList.remove("active");
+        })
+    }
+
+    
+
+    return {addOption,setOptions,build,formatText,sort};
 }
 
 String.prototype.contains = function(other){
@@ -109,21 +147,26 @@ function form2object(form){
     return data;
 }
 
+const listOfOptions = [
+    ["Riyadh"  , "RUH | Riyadh   | الرياض "],
+    ["Dammam"  , "DMM | Dammam   | الدمام "],
+    ["Jeddah"  , "JED | Jeddah   | جدة    "],
+    ["Hofuf"   , "HOF | Hofuf    | الهفوف "],
+    ["Hail"    , "HAL | Hail     | حائل   "],
+    ["Makka"   , "MAK | Makka    | مكة    "],
+    ["Tabuk"   , "TBK | Tabuk    | تبوك   "],
+    ["Arar"    , "ARR | Arar     | عرعر   "],
+    ["Qatif"   , "QTF | Qatif    | القطيف "],
+    ["Dhahran" , "DHR | Dhahran  | الظهران"],
+    ["Jaizan"  , "JZN | Jaizan   | جيزان  "],
+    ["Qasim"   , "QSM | Qasim    | القصيم "],
+    ["Khobar"  , "KHB | Khobar   | الخبر  "],
+    ["Bqaiq"   , "BAQ | Bqaiq    | بقيق   "],
+];
+
 document.querySelector('button[type="button"]').addEventListener("click",onButtonClick);
 const input = document.querySelector('input.smart');
-const sdd = new SmartDropDown(input, x => `<td>${x.split(/[|]/g).join('</td><td>')}</td>`)
-        .addOption("Riyadh"  , "RUH | Riyadh   | الرياض ")
-        .addOption("Dammam"  , "DMM | Dammam   | الدمام ")
-        .addOption("Jeddah"  , "JED | Jeddah   | جدة    ")
-        .addOption("Hofuf"   , "HOF | Hofuf    | الهفوف ")
-        .addOption("Hail"    , "HAL | Hail     | حائل   ")
-        .addOption("Makka"   , "MAK | Makka    | مكة    ")
-        .addOption("Tabuk"   , "TBK | Tabuk    | تبوك   ")
-        .addOption("Arar"    , "ARR | Arar     | عرعر   ")
-        .addOption("Qatif"   , "QTF | Qatif    | القطيف ")
-        .addOption("Dhahran" , "DHR | Dhahran  | الظهران")
-        .addOption("Jaizan"  , "JZN | Jaizan   | جيزان  ")
-        .addOption("Qasim"   , "QSM | Qasim    | القصيم ")
-        .addOption("Khobar"  , "KHB | Khobar   | الخبر  ")
-        .addOption("Bqaiq"   , "BAQ | Bqaiq    | بقيق   ")
-        .build();
+const sdd = new SmartDropDown(input, x => `<td>${x.split(/[|]/g).join('</td><td>')}</td>`);
+sdd.setOptions(listOfOptions);
+sdd.sort();
+sdd.build();
