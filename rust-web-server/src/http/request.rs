@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use std::net::TcpStream;
-
 pub const GET     : &'static str = "GET";
 pub const POST    : &'static str = "POST";
 pub const DELETE  : &'static str = "DELETE";
@@ -34,23 +32,24 @@ impl HttpRequest {
     let mut  lines = request.lines();
     let first = lines.next().unwrap();
     let parts : Vec<&str> = first.split(" ").collect::<Vec<&str>>();
-
-    _method = match format!("{}", parts[0].trim().to_uppercase()).as_str() {
-        GET    => GET,
-        POST   => POST,
-        DELETE => DELETE,
-        PUT    => PUT,
-        PATCH  => PATCH,
-            _  => UNKNOWN
-    };
-    let _path_and_query = parts[1].split("?").collect::<Vec<_>>();
-    _path = _path_and_query[0];
-    if _path_and_query.len()>1 {
-      let _query_items = _path_and_query[1].split("&");
-      for item in _query_items {
-        let kv = item.split("=").collect::<Vec<_>>();
-        if kv.len() > 1 {
-          _query.insert(String::from(kv[0]), kv[1..].join("="));
+    if parts.len() >= 1 {
+      _method = match format!("{}", parts[0].trim().to_uppercase()).as_str() {
+          GET    => GET,
+          POST   => POST,
+          DELETE => DELETE,
+          PUT    => PUT,
+          PATCH  => PATCH,
+              _  => UNKNOWN
+      };
+      let _path_and_query = parts[1].split("?").collect::<Vec<_>>();
+      _path = _path_and_query[0];
+      if _path_and_query.len()>1 {
+        let _query_items = _path_and_query[1].split("&");
+        for item in _query_items {
+          let kv = item.split("=").collect::<Vec<_>>();
+          if kv.len() > 1 {
+            _query.insert(String::from(kv[0]), kv[1..].join("="));
+          }
         }
       }
     }

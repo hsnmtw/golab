@@ -4,6 +4,7 @@ use crate::http::request::HttpRequest;
 
 const ERR_404   : &'static str = "404 : requested resource cannot be found !";
 const HOME_PAGE : &'static str = "/assets/html/home.html";
+const FAV_ICON  : &'static str = "/assets/favicon.ico";
 
 
 pub struct HttpResponse {
@@ -18,6 +19,9 @@ impl HttpResponse {
     pub fn is_static_file(&mut self) -> bool {
         if &self.request.path == "/" {
             self.request.path = String::from(HOME_PAGE);
+        }
+        if &self.request.path == "/favicon.ico" {
+            self.request.path = String::from(FAV_ICON);
         }
         let path = format!("./{}",self.request.path).to_owned();
         if !Path::new(&path).exists() {
@@ -40,8 +44,8 @@ impl HttpResponse {
         if self.is_static_file() {
             return true;
         }
-        //let _ = self.stream.write(ERR_404.as_bytes());
-        self.request.path = String::from("/assets/html/404.html");
+        let _ = self.stream.write(ERR_404.as_bytes());
+        // self.request.path = String::from("/assets/html/404.html");
         return self.is_static_file();
     }
     
