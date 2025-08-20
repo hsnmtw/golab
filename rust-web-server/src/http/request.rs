@@ -1,15 +1,17 @@
 use std::collections::HashMap;
 
-const GET       : &'static str = "GET";
-const POST      : &'static str = "POST";
-const DELETE    : &'static str = "DELETE";
-const PATCH     : &'static str = "PATCH";
-const PUT       : &'static str = "PUT";
+use std::net::TcpStream;
 
-pub enum HttpMethod { UNKNOWN,GET,POST,DELETE,PATCH,PUT }
+pub const GET     : &'static str = "GET";
+pub const POST    : &'static str = "POST";
+pub const DELETE  : &'static str = "DELETE";
+pub const PATCH   : &'static str = "PATCH";
+pub const PUT     : &'static str = "PUT";
+pub const UNKNOWN : &'static str = "UNKNOWN";
 
 pub struct HttpRequest {
-  pub method : HttpMethod,
+  // pub stream: TcpStream,
+  pub method : String,
   pub path   : String,
   pub body   : String,
   pub query  : HashMap<String,String>,
@@ -18,8 +20,11 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
+  pub fn route(&self) -> String {
+    return format!("{}:{}",self.method,self.path);
+  }
   pub fn from(request: &str) -> HttpRequest {
-    let mut _method : HttpMethod = HttpMethod::GET;
+    let mut _method : &str = UNKNOWN;
     let mut _path   : &str = "/";
     let mut _body   : &str = "";
     let mut _query  : HashMap<String,String> = HashMap::new();
@@ -29,14 +34,14 @@ impl HttpRequest {
     let mut  lines = request.lines();
     let first = lines.next().unwrap();
     let parts : Vec<&str> = first.split(" ").collect::<Vec<&str>>();
-    
-    _method = match parts[0].to_uppercase().as_str() {
-        GET    => HttpMethod::GET,
-        POST   => HttpMethod::POST,
-        DELETE => HttpMethod::DELETE,
-        PUT    => HttpMethod::PUT,
-        PATCH  => HttpMethod::PATCH,
-            _  => HttpMethod::UNKNOWN
+
+    _method = match format!("{}", parts[0].trim().to_uppercase()).as_str() {
+        GET    => GET,
+        POST   => POST,
+        DELETE => DELETE,
+        PUT    => PUT,
+        PATCH  => PATCH,
+            _  => UNKNOWN
     };
     let _path_and_query = parts[1].split("?").collect::<Vec<_>>();
     _path = _path_and_query[0];
@@ -75,7 +80,8 @@ impl HttpRequest {
     }
 
     return HttpRequest {
-      method : _method ,
+      // stream : stream,
+      method : String::from(_method),
       path   : String::from(_path),
       body   : String::from(_body),
       query  : _query  ,

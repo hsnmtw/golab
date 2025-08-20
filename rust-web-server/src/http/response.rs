@@ -1,5 +1,5 @@
-use std::{collections::HashMap, fs::{self, File}, io::Read, path::Path};
-use tokio::{io::AsyncWriteExt, net::TcpStream};
+use std::{collections::HashMap, fs::{self, File}, io::{Read, Write}, path::Path};
+use std::{net::TcpStream};
 use crate::http::request::HttpRequest;
 
 const ERR_404   : &'static str = "404 : requested resource cannot be found !";
@@ -11,10 +11,11 @@ pub struct HttpResponse {
   pub request: HttpRequest,
   pub headers: HashMap<String,String>,
   pub cookie : HashMap<String,String>,
+  pub is_handled: bool
 }
 
 impl HttpResponse {
-    pub async fn is_static_file(&mut self) -> bool {
+    pub fn is_static_file(&mut self) -> bool {
         if &self.request.path == "/" {
             self.request.path = String::from(HOME_PAGE);
         }
@@ -28,17 +29,20 @@ impl HttpResponse {
             Err(e) => Vec::from(format!("[ERROR]: unable to read file: {}",e).as_bytes()) 
         };
 
-        let _ = self.stream.write(&result).await;
+        let _ = self.stream.write(&result);
         return true;
     }
 
-    pub async fn handle(&mut self) -> bool {
-        if self.is_static_file().await {
+    pub fn handle(&mut self) -> bool {
+        if self.is_handled {
             return true;
         }
-        //let _ = self.stream.write(ERR_404.as_bytes()).await;
+        if self.is_static_file() {
+            return true;
+        }
+        //let _ = self.stream.write(ERR_404.as_bytes());
         self.request.path = String::from("/assets/html/404.html");
-        return self.is_static_file().await;
+        return self.is_static_file();
     }
     
     pub(crate) fn build(stream: TcpStream, request: HttpRequest) -> HttpResponse {
@@ -48,7 +52,8 @@ impl HttpResponse {
             stream  : stream, 
             request : request,
             headers : _headers, 
-            cookie  : _cookie
+            cookie  : _cookie,
+            is_handled: false,
         };
     }
 }
