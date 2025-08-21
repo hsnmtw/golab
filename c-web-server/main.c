@@ -14,19 +14,23 @@
 
 #define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 
-#define HTTP_PROTOCOL "HTTP/1.0"
-#define HTTP_REQUEST_BUFFER_SIZE 256
+#define HTTP_PROTOCOL "HTTP/1.1"
+#define HTTP_REQUEST_BUFFER_SIZE 2048
 #define HTTP_RORT_NUMBER 8080
 #define HTTP_RESPONSE_STATUS_CODE_200 "OK"
 #define HTTP_RESPONSE_STATUS_CODE_404 "Not Found"
 #define HTTP_RESPONSE_STATUS_CODE_500 "Internal Server Error"
 #define HTTP_RESPONSE_STATUS_CODE_306 "(Unused)"
-#define LANDING_PAGE "./assets/html/home.html"
+// #define LANDING_PAGE "./assets/html/home.html"
 #define NEW_LINE "\n"
+#define HTTP_METHOD_GET  0
+#define HTTP_METHOD_POST 1
 
-void error(char* message) {
-	printf("[ERROR]: %s [%d] %s", message, errno, strerror(errno));
-	exit(1);
+char* error(char* message) {
+	char* e = (char*) malloc(1000);
+	sprintf(e,"[ERROR]: %s [%d] %s", message, errno, strerror(errno));
+	//exit(1);
+	return e;
 }
 
 char* get_filename_ext(char *filename) {
@@ -40,22 +44,33 @@ bool streq(char* a, char* b) {
 }
 
 char* concat(char* a, char* b) {
-	size_t al = strlen(a);
-	size_t bl = strlen(b);
-	char* r = (char*) malloc(al+bl);
-	bzero(r,al+bl);
-	size_t max=al;
-	if(max<bl) max=bl;
-	for(size_t i=0;i<max;++i){
-		if(i<al)    r[i] = a[i];
-		if(i<bl) r[al+i] = b[i];
-	}
+	int al = strlen(a);
+	int bl = strlen(b);
+	int nl = al+bl;
+	char* r = (char*) malloc(nl+2);
+	bzero(r,nl);
+
+	strcpy(r,a);
+	strcat(r,b);
+	
+	// printf("\nr='%s'\n",r);
+	// printf("\na='%s'\n",a);
+	// int j=0;
+	// for(int i=0;i<al;++i){
+	// 	r[j++] = a[i];
+	// }
+	// printf("\nr='%s'\n",r);
+	// printf("\nb='%s'\n",b);
+	// for(int i=0;i<bl;++i){
+	// 	r[j++] = b[i];
+	// }
+	// printf("\nr='%s'\n",r);
+	// printf("\n\n\n[a=%s,b=%s,r=%s,al=%d,bl=%d,nl=%d]\n\n\n",a,b,r,al,bl,nl);
 	return r;
 } 
 
 char* get_content_type(char* path) {
-	char* contentType = "text/plain";
-	if (path == NULL || strlen(path) == 0) return contentType;
+	if (path == NULL || strlen(path) == 0) return "";
 	char* ext = get_filename_ext(path);
 
 	if(streq(ext, "md"   )) return "text/markdown";	
@@ -96,8 +111,8 @@ char* get_content_type(char* path) {
 	|| streq(ext, "xlsx" )) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 	if(streq(ext, "ppt"  ) 
 	|| streq(ext, "pptx" )) return "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
-
-	return contentType;
+	
+	return "text/plain";
 }
 
 char* get_status_code(int status) {
@@ -141,10 +156,9 @@ int write_response_headers(int sockfd, int status, char* path) {
 	n += write_to_socket(sockfd, get_status_code(status));
 	n += write_to_socket(sockfd, NEW_LINE);
 	n += write_to_socket(sockfd, "Content-Type: ");
-	// n += write_to_socket(sockfd, "text/html\n"); //get_content_type(path));
-	char* content_type = get_content_type(path);
-	n += write_to_socket(sockfd, content_type);
-	free(content_type);
+
+	n += write_to_socket(sockfd, get_content_type(path));
+
 	n += write_to_socket(sockfd, NEW_LINE);
 	n += write_to_socket(sockfd, "Date: ");
 	n += write_to_socket(sockfd, now("%Y-%m-%d %H:%M:%S\n"));
@@ -168,13 +182,13 @@ int write_response_headers(int sockfd, int status, char* path) {
 
 
 int serve_static_file(int sockfd, char* path) {
-	printf("serving static file : [%s]", path);
+	printf("serving static file : [%s]\n", path);
 	int n = 0;
 	FILE *fptr = fopen(path, "r");
 	//printf("\nfptr  = %d\n", fptr == NULL);
 	//printf("\nerrno = %d\n", errno == 0);
 	if(fptr == NULL || errno != 0) {
-		error("failed to read file ... ");
+		write_to_socket(sockfd,error("failed to read file ... "));
 		return errno;
 	}
 	{
@@ -188,6 +202,7 @@ int serve_static_file(int sockfd, char* path) {
 
 	}
 	fclose(fptr);
+	// n+=write_to_socket(sockfd,NEW_LINE);
 	return n;
 }
 
@@ -196,24 +211,122 @@ typedef struct {
 	const char* remote_address;
 } HttpConnection;
 
-void handle_connection(HttpConnection *cn) {
+// enum HttpMethod { GET,POST }
+typedef struct {
+	int method;
+	char* path;
+	char* query;
+	char* body;
+} HttpRequest;
+/*
+	GET /path?query HTTP/1.1
+	Header1: Value1
+	Header2: Value2
+	[empty line]
+	Body
+*/
+void fill_http_request(HttpRequest* request, char* buffer) {
+	
+	request->method = HTTP_METHOD_GET;
+	if(buffer[0]=='P' && buffer[1]=='O' && buffer[2]=='S' && buffer[3]=='T') 
+		request->method = HTTP_METHOD_POST;
+
+	int row=1;
+	int col=1;
+	int j=0;
+
+	request->path  = (char*) malloc(518);
+	request->query = (char*) malloc(518);
+	request->body  = (char*) malloc(1024);
+
+	bzero(request->path, 518);
+	bzero(request->query, 518);
+	bzero(request->body, 1024);
+
+	for(size_t i=0;i<HTTP_REQUEST_BUFFER_SIZE || buffer[i]=='\0';++i) {
+		if(row == 1 && col>1 && buffer[i]==' ') {
+			j=1;
+			i++;
+			request->path[0] = '.';
+			while(i<HTTP_REQUEST_BUFFER_SIZE && j<518 && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] !='?' && buffer[i] != '\0') {
+				request->path[j++] = buffer[i++];
+			}
+			j=0;
+			if(buffer[i]=='?') {
+				i++;
+				while(i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] != '\0') {
+					request->query[j++] = buffer[i++];
+				}
+			}
+		}
+		if(buffer[i]=='\n') {
+			row++;
+			col=1;
+			if(i+1<HTTP_REQUEST_BUFFER_SIZE && buffer[i+1]=='\n') {
+				//everything else is the body
+				j=0;
+				while(buffer[i] != '\0' && i<HTTP_REQUEST_BUFFER_SIZE) {
+					request->body[j++] = buffer[i++];
+				}
+			}
+		}
+		col++;
+	}
+	// free(path);  
+	// free(query); 
+	// free(body);  
+}
+
+void generate_pdf(int sockfd, char* path) {
+	printf("%s", path);
+	
+}
+
+void handle_connection(HttpConnection* cn) {
 	int sockfd = cn->sockfd;
-	char buffer[HTTP_REQUEST_BUFFER_SIZE];
+	char* buffer = malloc(HTTP_REQUEST_BUFFER_SIZE);
 	//printf("got here ........ %d\n",sockfd);
 	bzero(buffer,HTTP_REQUEST_BUFFER_SIZE);
 	int n = read(sockfd,buffer,HTTP_REQUEST_BUFFER_SIZE);
 	if (n < 0) error("failed reading from socket");
 	
+	HttpRequest* request = (HttpRequest*) malloc(sizeof(HttpRequest));
+	fill_http_request(request, buffer);
+	printf("Http Request [Path   = '%s']\n", request->path);
+	// printf("Http Request [Query  = '%s']\n", request->query);
+	// printf("Http Request [Method = '%d']\n", request->method);
+	// printf("Http Request [Body   = '%s']\n", request->body);
+
 	//printf("Here is the message: %s\n",buffer);
-	printf("[%s] connected", cn->remote_address);
-	n += write_response_headers(sockfd, 200, LANDING_PAGE);
-	n += serve_static_file(sockfd,LANDING_PAGE);		
+	printf("[%s] connected\n", cn->remote_address);
+	char* path = (char*) malloc(518);
+	strcpy(path, request->path);
+
+	if(streq(path,"./") || streq(path,"./favicon.ico") || streq(path,"./home")) {
+		strcpy(path, "./assets/html/home.html");
+	}
+
+	n += write_response_headers(sockfd, 200, path);
+
+	if(streq(path,"/pdf.pdf")) {
+		n += generate_pdf(sockfd,path);	
+	} else {
+		n += serve_static_file(sockfd,path);	
+	}
 
 	if (n < 0) 
 		error("failed writing to socket");
 
 	close(sockfd);
+	//sleep(100);
+
 	free(cn);
+	free(request->path);
+	free(request->query);
+	free(request->body);
+	free(request);
+	free(path);
+	free(buffer);
 }
 
 char* get_remote_end_socket_ip(struct sockaddr_in cli_addr) {
@@ -229,7 +342,8 @@ void accept_client_connection(){
 	struct sockaddr_in serv_addr, cli_addr;
 	int port = HTTP_RORT_NUMBER;
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0); //AF_INET: IPv4
-	
+
+
 	if (sockfd < 0 || errno != 0) 
         error("failed opening socket");
 	
@@ -249,7 +363,7 @@ void accept_client_connection(){
 
 		if (newsockfd < 0) 
 		  error("failed on accept");
-		
+
 		pthread_t threadx;
 		HttpConnection *cn = malloc(sizeof *cn);
 		cn->sockfd = newsockfd;
