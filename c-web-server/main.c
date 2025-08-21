@@ -10,10 +10,11 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <time.h>
-#include <stdarg.h>
+#include <stdbool.h>
 
-#define ARRAY_LENGTH(arr) ((int) (sizeof (arr) / sizeof (arr)[0]))
-#define HTTP_PROTOCOL "HTTP/2"
+#define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
+
+#define HTTP_PROTOCOL "HTTP/1.0"
 #define HTTP_REQUEST_BUFFER_SIZE 256
 #define HTTP_RORT_NUMBER 8080
 #define HTTP_RESPONSE_STATUS_CODE_200 "OK"
@@ -21,26 +22,92 @@
 #define HTTP_RESPONSE_STATUS_CODE_500 "Internal Server Error"
 #define HTTP_RESPONSE_STATUS_CODE_306 "(Unused)"
 #define LANDING_PAGE "./assets/html/home.html"
+#define NEW_LINE "\n"
+
+void error(char* message) {
+	printf("[ERROR]: %s [%d] %s", message, errno, strerror(errno));
+	exit(1);
+}
+
+char* get_filename_ext(char *filename) {
+    char* dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
+bool streq(char* a, char* b) {
+	return 0 == strcmp(a,b);
+}
 
 char* concat(char* a, char* b) {
-	size_t l = strlen(a)+strlen(b)+1;
-	char fn[l];
-	// int length = 0;
-	// for(size_t i=0;i<count;++i){
-	// 	length += strlen(arg[i]);
-	// 	// printf("%s\n",arg[i]);
-	// }
-	// fn = malloc( length ); // Add 1 for null terminator.
-	// strcpy( fn, arg[0] );
-	// for(size_t i=1;i<count;++i){
-	// 	strcat(fn, arg[i]);
-	// }
-	// return fn;
-	sprintf(fn,"%s%s",a,b);
-	// printf("------%s-----",fn);
-	char* rs = malloc (l);
-	strcpy(rs,fn);
-	return rs;
+	size_t al = strlen(a);
+	size_t bl = strlen(b);
+	char* r = (char*) malloc(al+bl);
+	bzero(r,al+bl);
+	size_t max=al;
+	if(max<bl) max=bl;
+	for(size_t i=0;i<max;++i){
+		if(i<al)    r[i] = a[i];
+		if(i<bl) r[al+i] = b[i];
+	}
+	return r;
+} 
+
+char* get_content_type(char* path) {
+	char* contentType = "text/plain";
+	if (path == NULL || strlen(path) == 0) return contentType;
+	char* ext = get_filename_ext(path);
+
+	if(streq(ext, "md"   )) return "text/markdown";	
+	if(streq(ext, "png"  )  
+	|| streq(ext, "jpg"  )  
+	|| streq(ext, "jpeg" ) 
+	|| streq(ext, "gif"  )  
+	|| streq(ext, "bmp"  )  
+	|| streq(ext, "tif"  )  
+	|| streq(ext, "tiff" )) return concat("image/",ext);
+	if(streq(ext, "svg"  )) return "image/svg+xml";
+	if(streq(ext, "zip"  )  
+	|| streq(ext, "rtf"  )  
+	|| streq(ext, "pdf"  )  
+	|| streq(ext, "xml"  )  
+	|| streq(ext, "wasm" ) 
+	|| streq(ext, "json" )) return concat("application/",ext); 
+	if(streq(ext, "txt"  )  
+	|| streq(ext, "xslt" ) 
+	|| streq(ext, "xhtml") 
+	|| streq(ext, "htm"  )  
+	|| streq(ext, "html" )  
+	|| streq(ext, "csv"  )  
+	|| streq(ext, "css"  )) return concat("text/",ext);
+	if(streq(ext, "mjs"  ) 
+	|| streq(ext, "js"   )) return "text/javascript";
+	if(streq(ext, "otf"  )  
+	|| streq(ext, "ttf"  )  
+	|| streq(ext, "eot"  )  
+	|| streq(ext, "woff" ) 
+	|| streq(ext, "woff2")) return concat("font/",ext);	
+	if(streq(ext, "dll"  )
+	|| streq(ext, "msi"  )  
+	|| streq(ext, "exe"  )) return "application/octet-stream";	
+	if(streq(ext, "doc"  ) 
+	|| streq(ext, "docx" )) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	if(streq(ext, "xls"  ) 
+	|| streq(ext, "xlsx" )) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	if(streq(ext, "ppt"  ) 
+	|| streq(ext, "pptx" )) return "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
+
+	return contentType;
+}
+
+char* get_status_code(int status) {
+	switch (status)
+	{
+	case 200: return HTTP_RESPONSE_STATUS_CODE_200;
+	case 404: return HTTP_RESPONSE_STATUS_CODE_404;
+	case 500: return HTTP_RESPONSE_STATUS_CODE_500;
+	default : return HTTP_RESPONSE_STATUS_CODE_306;
+	}
 }
 
 
@@ -61,8 +128,29 @@ char* now(char* format) {
 	return rs;
 }
 
-char* get_default_response_headers() {
-	char* headers =
+int write_to_socket(int sockfd, char* contents) {
+	return write(sockfd, contents, strlen(contents));
+}
+
+
+int write_response_headers(int sockfd, int status, char* path) {
+	int n = 0;
+	printf("%s\n",path);
+	n += write_to_socket(sockfd, HTTP_PROTOCOL);
+	n += write_to_socket(sockfd, " 200 ");
+	n += write_to_socket(sockfd, get_status_code(status));
+	n += write_to_socket(sockfd, NEW_LINE);
+	n += write_to_socket(sockfd, "Content-Type: ");
+	// n += write_to_socket(sockfd, "text/html\n"); //get_content_type(path));
+	char* content_type = get_content_type(path);
+	n += write_to_socket(sockfd, content_type);
+	free(content_type);
+	n += write_to_socket(sockfd, NEW_LINE);
+	n += write_to_socket(sockfd, "Date: ");
+	n += write_to_socket(sockfd, now("%Y-%m-%d %H:%M:%S\n"));
+	n += write_to_socket(sockfd, "Last-Modified: ");
+	n += write_to_socket(sockfd, now("%Y-%m-%d %H:%M:%S\n"));		
+	n += write_to_socket(sockfd , 
 	"Access-Control-Allow-Origin: *\n"
 	"Connection: Keep-Alive\n"
 	"Keep-Alive: timeout=5, max=997\n"
@@ -71,143 +159,24 @@ char* get_default_response_headers() {
 	"X-Powered-By: C99\n"
 	"X-Content-Type-Options: nosniff\n"
 	"x-frame-options: SAMEORIGIN\n"
-	;
-	char* date = concat("Date: ", now("%Y-%m-%d %H:%M:%S\n"));
-	char* modify = concat("Last-Modified", now("%Y-%m-%d %H:%M:%S\n"));
+	);
+	n += write_to_socket(sockfd, NEW_LINE);
 
-	return concat(concat(headers,date),modify);
+	return n;
 }
 
-typedef struct {
-	char** array;
-	size_t length;
-} StringArray;
 
-StringArray str_split(char* a_str, const char a_delim)
-{
-    char** result    = 0;
-    size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
-
-    /* Count how many elements will be extracted. */
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
-
-    /* Add space for trailing token. */
-    count += last_comma < (a_str + strlen(a_str) - 1);
-
-    /* Add space for terminating null string so caller
-       knows where the list of returned strings ends. */
-    count++;
-
-    result = malloc(sizeof(char*) * count);
-
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
-
-        while (token)
-        {
-            assert(idx < count);
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
-        assert(idx == count - 1);
-        *(result + idx) = 0;
-    }
-
-	StringArray string_array = {
-		.array = result,
-		.length = count
-	};
-
-    return string_array;
-}
-
-char* get_content_type(char* path) {
-	char* contentType = "text/plain";
-	if (path == NULL || sizeof(path) == 0) return contentType;
-	StringArray ps = str_split(path,'.');
-	char* ext = ps.array[ps.length-1];
-
-	if(!strcmp(ext, "md")) return "text/markdown";
-	
-	if(!strcmp(ext, "png")  
-	|| !strcmp(ext, "jpg")  
-	|| !strcmp(ext, "jpeg") 
-	|| !strcmp(ext, "gif")  
-	|| !strcmp(ext, "bmp")  
-	|| !strcmp(ext, "tif")  
-	|| !strcmp(ext, "tiff") )  return strcat("image/",ext);
-
-	if(!strcmp(ext, "svg")) return "image/svg+xml";
-	if(!strcmp(ext, "zip")  
-	|| !strcmp(ext, "rtf")  
-	|| !strcmp(ext, "pdf")  
-	|| !strcmp(ext, "xml")  
-	|| !strcmp(ext, "wasm") 
-	|| !strcmp(ext, "json")) return strcat("application/",ext); 
-
-	if(!strcmp(ext, "txt")  
-	|| !strcmp(ext, "xslt") 
-	|| !strcmp(ext, "xhtml") 
-	|| !strcmp(ext, "htm")  
-	|| !strcmp(ext, "html")  
-	|| !strcmp(ext, "csv")  
-	|| !strcmp(ext, "css")  ) return strcat("text/",ext);
-
-	if(!strcmp(ext,"mjs") 
-	|| !strcmp(ext,"js" )) return "text/javascript";
-
-	if(!strcmp(ext, "otf")  
-	|| !strcmp(ext, "ttf")  
-	|| !strcmp(ext, "eot")  
-	|| !strcmp(ext, "woff") 
-	|| !strcmp(ext, "woff2")) return strcat("font/",ext);	
-
-	if(!strcmp(ext, "dll")
-	|| !strcmp(ext, "msi")  
-	|| !strcmp(ext, "exe") ) return "application/octet-stream";
-	
-	if(!strcmp(ext, "doc") 
-	|| !strcmp(ext, "docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	if(!strcmp(ext, "xls") 
-	|| !strcmp(ext, "xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	if(!strcmp(ext, "ppt") 
-	|| !strcmp(ext, "pptx")) return "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
-
-	return contentType;
-}
-
-char* get_status_code(int status) {
-	switch (status)
-	{
-	case 200: return HTTP_RESPONSE_STATUS_CODE_200;
-	case 404: return HTTP_RESPONSE_STATUS_CODE_404;
-	case 500: return HTTP_RESPONSE_STATUS_CODE_500;
-	default : return HTTP_RESPONSE_STATUS_CODE_306;
-	}
-}
-
-int write_to_socket(int sockfd, char* contents) {
-	return write(sockfd, contents, sizeof(contents));
-}
 
 int serve_static_file(int sockfd, char* path) {
+	printf("serving static file : [%s]", path);
 	int n = 0;
 	FILE *fptr = fopen(path, "r");
+	//printf("\nfptr  = %d\n", fptr == NULL);
+	//printf("\nerrno = %d\n", errno == 0);
+	if(fptr == NULL || errno != 0) {
+		error("failed to read file ... ");
+		return errno;
+	}
 	{
 		char c = fgetc(fptr);
         while (c != EOF)
@@ -220,11 +189,6 @@ int serve_static_file(int sockfd, char* path) {
 	}
 	fclose(fptr);
 	return n;
-}
-
-void error(char* message) {
-	printf("[ERROR]: %s [%d] %s", message, errno, strerror(errno));
-	exit(1);
 }
 
 typedef struct {
@@ -242,9 +206,7 @@ void handle_connection(HttpConnection *cn) {
 	
 	//printf("Here is the message: %s\n",buffer);
 	printf("[%s] connected", cn->remote_address);
-	char header[256];
-	sprintf(header, "%s %d %s\n%s\n%s\n\n",HTTP_PROTOCOL,200,get_status_code(200),"Content-Type:", get_content_type(LANDING_PAGE));
-	n += write_to_socket(sockfd, header);
+	n += write_response_headers(sockfd, 200, LANDING_PAGE);
 	n += serve_static_file(sockfd,LANDING_PAGE);		
 
 	if (n < 0) 
@@ -252,6 +214,13 @@ void handle_connection(HttpConnection *cn) {
 
 	close(sockfd);
 	free(cn);
+}
+
+char* get_remote_end_socket_ip(struct sockaddr_in cli_addr) {
+	struct in_addr ip_address = ((struct sockaddr_in *) &cli_addr)->sin_addr;
+	char * ip = (char *) malloc(INET_ADDRSTRLEN);
+	inet_ntop( AF_INET, &ip_address, ip, INET_ADDRSTRLEN );
+	return ip;
 }
 
 void accept_client_connection(){
@@ -281,14 +250,10 @@ void accept_client_connection(){
 		if (newsockfd < 0) 
 		  error("failed on accept");
 		
-		struct in_addr ip = ((struct sockaddr_in *) &cli_addr)->sin_addr;
-		char str[INET_ADDRSTRLEN];
-		inet_ntop( AF_INET, &ip, str, INET_ADDRSTRLEN );
-
 		pthread_t threadx;
 		HttpConnection *cn = malloc(sizeof *cn);
 		cn->sockfd = newsockfd;
-		cn->remote_address = str;
+		cn->remote_address = get_remote_end_socket_ip(cli_addr);
 		pthread_create(&threadx, NULL,(void*) handle_connection,(void*) cn);		
 	}
 	
@@ -297,13 +262,12 @@ void accept_client_connection(){
 
 
 int main() {
-
-	printf("%s\n", get_default_response_headers());
-	return 0;
-    // printf("Http/TCP Client in C\n");
-	// accept_client_connection();
-	// if(errno!=0) error("network error");	
-    // return 0;
+	// printf("%s\n", get_default_response_headers());
+	// return 0;
+    printf("Http/TCP Client in C : %s\n", concat("by : ", "Hussain Al Mutawa"));
+	accept_client_connection();
+	if(errno!=0) error("network error");	
+    return 0;
 }
 
 
