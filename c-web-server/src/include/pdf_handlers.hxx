@@ -1,16 +1,7 @@
 #include <cstdio>
-#include "core/SkCanvas.h"
-#include "core/SkPaint.h"
-#include "core/SkFont.h"
-#include "core/SkScalar.h"
-#include "core/SkFontStyle.h"
-#include "core/SkFontMgr.h"
-#include "core/SkTypeface.h"
-#include "core/SkPath.h"
-#include "include/core/SkStream.h"
-#include "modules/skparagraph/include/FontCollection.h"
-#include "include/docs/SkPDFDocument.h"
+
 #include <functional>
+#include "hpdf.h"
 
 #include "utils.hxx"
 
@@ -22,65 +13,65 @@
 #define BUFFER_CHUNK_SIZE 1024
 #endif
 
-void generate_pdf(function<void(char*,int)> callback) {
+void error_handler (HPDF_STATUS   error_no,
+                    HPDF_STATUS   detail_no,
+                    void         *user_data)
+{
+    printf ("ERROR: error_no=%04X, detail_no=%u\n", (HPDF_UINT)error_no,
+                (HPDF_UINT)detail_no);
+}
+
+int generate_pdf(function<void(char*,int)> callback) {
 	
-	SkPDF::Metadata metadata;
-	// metadata.fTitle = "test pdf";
-    // metadata.fCreator = "Example WritePDF() Function";
-    // metadata.fCreation = {0, 2019, 1, 4, 31, 12, 34, 56};
-    // metadata.fModified = {0, 2019, 1, 4, 31, 12, 34, 56};
-    // See also SkPDF::JPEG::MetadataWithCallbacks()
-    // metadata.jpegDecoder = SkPDF::JPEG::Decode;
-    // metadata.jpegEncoder = SkPDF::JPEG::Encode;
-	//SkFILEWStream buffer = SkFILEWStream("./test.pdf");
-    auto stream = SkDynamicMemoryWStream();
-	auto pdfDocument = SkPDF::MakeDocument(&stream, metadata);
-	
-	SkCanvas* canvas = pdfDocument->beginPage(500,800);
-	canvas->drawColor(SK_ColorBLACK); // clear the canvas
+    HPDF_Doc  pdf = HPDF_New (error_handler, NULL);
 
-	// const SkScalar R = 115.2f, C = 128.0f;
-    // SkPath path;
-    // path.moveTo(C + R, C);
-    // for (int i = 1; i < 8; ++i) {
-    //     SkScalar a = 2.6927937f * i;
-    //     path.lineTo(C + R * cos(a), C + R * sin(a));
-    // }
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColor(SK_ColorRED);
+    if (!pdf) {
+        printf ("error: cannot create PdfDoc object\n");
+        return 1;
+    }
 
-    // auto c = sk_make_sp<skia::textlayout::FontCollection>();
-    // sk_sp<SkFontMgr> fontMgr;
-    // std::vector<SkString> defaultFamilyNames;
-    // c->setDefaultFontManager(fontMgr,defaultFamilyNames);
-    // auto typeface = fontMgr.release()->makeFromFile("./times.ttf"); //skFontManager.get().matchFamilyStyle("Arial", SkFontStyle(SkFontStyle::kBold_Weight, SkFontStyle::kCondensed_Width, SkFontStyle::kUpright_Slant));
-    // SkFont font;
-    // font.setSize(64);
-    // font.setTypeface(typeface);
+    HPDF_Page page = HPDF_AddPage (pdf);
+    HPDF_REAL height = HPDF_Page_GetHeight (page);
+    HPDF_REAL width = HPDF_Page_GetWidth (page);
+    HPDF_Page_SetLineWidth (page, 1);
 
-    // SkString text("Hello World"); //concat("Some text in pdf showing time ", now("%Y-%m-%d %H:%M:%S")));
-    // canvas->save();
-    
-    // auto skFontMgr = SkFontMgr;
-    // auto typeface = skFontMgr->matchFamilyStyle(nullptr, SkFontStyle::Bold());
-    // auto typeface = skFontMgr.get()->makeFromFile("./times.ttf");
-    // auto typeface = skFontMgr->legacyMakeTypeface("Times New Roman",  SkFontStyle::Bold()   );
-    // SkFont font = SkFont(typeface, SkScalar(20));
-    // canvas->drawSimpleText(text.c_str(), text.size(), SkTextEncoding::kUTF8,10,10, font,paint);
-    // canvas->save();
-	pdfDocument->endPage();
+    HPDF_Font font = HPDF_GetFont (pdf, "Times-Roman", NULL);
+    HPDF_Page_SetFontAndSize (page, font, 24);
+    const char *page_title = concat("Generated Using LibHaru, time is ", now("%D %T"));
+    HPDF_REAL tw = HPDF_Page_TextWidth (page, page_title);
+    HPDF_Page_BeginText (page);
+    HPDF_Page_TextOut (page, (width - tw) / 2, height - 50, page_title);
+    HPDF_Page_EndText (page);
 
-    pdfDocument->close();
-	stream.flush();
+    /* save the document to a stream */
+    HPDF_SaveToStream (pdf);
+    fprintf (stderr, "the size of data is %d\n", HPDF_GetStreamSize(pdf));
 
-	char buffer[BUFFER_CHUNK_SIZE];
-	int length = stream.bytesWritten();
-	int offset=0, remaining = std::min(length,BUFFER_CHUNK_SIZE);
-	while(stream.read(&buffer,offset,remaining)){
-		callback(buffer,remaining);
-		offset+=remaining;
-	}
+    /* rewind the stream. */
+    HPDF_ResetStream (pdf);
+
+    /* get the data from the stream and output it to stdout. */
+    for (int i=0;i<20;++i) {
+        HPDF_BYTE buf[4096];
+        HPDF_UINT32 siz = 4096;
+        HPDF_STATUS read = HPDF_ReadFromStream (pdf, buf, &siz);
+        callback((char*)buf,read);
+
+        printf("%ld\n", read);
+
+       if (siz == 0) {
+            break;
+       }
+
+        // if (fwrite (buf, siz, 1, stdout) != 1) {
+        //     fprintf (stderr, "cannot write to stdout %d", siz);
+        //     //break;
+        // }
+    }
+
+    HPDF_Free (pdf);
+
+    return 0;
 }
 
 
