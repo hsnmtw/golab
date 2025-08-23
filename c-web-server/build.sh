@@ -1,5 +1,5 @@
 rm -rf bin/app
-export LD_PRELOAD=../../libharu/src/libhpdf.so.2.4
+
 g++ src/main.cxx \
  -std=c++17 \
  -ffast-math \
@@ -22,10 +22,6 @@ g++ src/main.cxx \
  -g \
  -Wnon-virtual-dtor \
  -Wno-noexcept-type \
- -I ./../../libharu/include \
- -L./../../libharu/src \
- -l:libhpdf.so \
  -o ./bin/app \
  -fsanitize=address -static-libasan
- 
  bin/app

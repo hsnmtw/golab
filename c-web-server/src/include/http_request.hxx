@@ -37,17 +37,14 @@ void fill_http_request(HttpRequest* request, char* buffer) {
 
 	int row=1;
 	int col=1;
-	int j=0;
 
 	for(int i=0;i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\0';++i) {
 		if(row == 1 && col>1 && buffer[i]==' ') {
-			j=1;
 			i++;
 			request->path = ".";
 			while(i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] !='?' && buffer[i] != '\0') {
 				request->path += buffer[i++];
 			}
-			j=0;
 			if(buffer[i]=='?') {
 				i++;
 				while(i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] != '\0') {
@@ -60,7 +57,6 @@ void fill_http_request(HttpRequest* request, char* buffer) {
 			col=1;
 			if(i+1<HTTP_REQUEST_BUFFER_SIZE && buffer[i+1]=='\n') {
 				//everything else is the body
-				j=0;
 				while(buffer[i] != '\0' && i<HTTP_REQUEST_BUFFER_SIZE) {
 					request->body += buffer[i++];
 				}

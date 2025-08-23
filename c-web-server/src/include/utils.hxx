@@ -38,17 +38,9 @@ static bool streq(string a, string b) {
 
 
 string concat(string a, string b) {
-	const int al = a.length();
-	const int bl = b.length();
-	const int nl = al+bl;
-	char* r = new char[nl+2];
-	bzero(r,nl);
-
-	strcpy(r,a.c_str());
-	strcat(r,b.c_str());
-
 	string s;
-	s.assign(r);
+	s.assign(a);
+	s.append(b);
 	return s;
 }
 

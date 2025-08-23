@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <signal.h> 
+#include <format> 
 
 
 #include "include/thread_pools.hxx"
@@ -24,7 +25,7 @@
 #ifndef INADDR_ANY
 	#define	INADDR_ANY		((in_addr_t) 0x00000000)
 #endif
-#include <format>
+// #include <format>
 
 #define BUFFER_CHUNK_SIZE 1024
 #define HTTP_PROTOCOL "HTTP/1.1"
@@ -49,11 +50,9 @@
 #define HTTP_METHOD_POST 1
 
 
-static const char* error(char const* message) {
-	char* e = new char[1000];
-	sprintf(e,"[ERROR]: %s [%d] %s", message, errno, strerror(errno));
-	//exit(1);
-	return e;
+static const string error(const string message) {
+	// return fmt::format("[ERROR]: {} [{}] {}", message, errno, strerror(errno));
+	return concat(message, concat(" :: ", strerror(errno)));
 }
 
 const string get_content_type(string path) {
@@ -162,7 +161,7 @@ int serve_static_file(int sockfd, string path) {
 
 		if(fptr == NULL || errno != 0) {
 
-			write_to_socket(sockfd,error("failed to read file ... "));
+			write_to_socket(sockfd,error("failed to read file ... ").c_str());
 			return errno;
 		}
 
@@ -221,9 +220,14 @@ void handle_connection(HttpConnection cn) {
 
 		} else if(streq(request.path,"./pdf.pdf")) {
 			n += write_response_headers(sockfd, 200, request.path);
-			generate_pdf([sockfd](char* _buffer, int _bytes){
-				(void)write_to_socket(sockfd,_buffer,true);
-			});
+			try{
+				generate_pdf([sockfd](char* _buffer, int _bytes){
+					(void)write_to_socket(sockfd,_buffer,true);
+				});
+			}catch(int err){
+				errno=err;
+				cout << "err" << endl;
+			}
 		} else {
 			n += write_response_headers(sockfd, 200, request.path);
 			n += serve_static_file(sockfd,request.path);
@@ -248,7 +252,7 @@ void handle_connection(HttpConnection cn) {
 
 string get_remote_end_socket_ip(struct sockaddr_in cli_addr) {
 	struct in_addr ip_address = ((struct sockaddr_in *) &cli_addr)->sin_addr;
-	char* ip = new char[INET_ADDRSTRLEN];
+	char ip[INET_ADDRSTRLEN] = {0};
 	inet_ntop( AF_INET, &ip_address, ip, INET_ADDRSTRLEN );
 	string s;
 	s.assign(ip);
@@ -294,7 +298,7 @@ void accept_client_connection(){
 		}
 
 		// Create a thread pool with 4 threads
-		//thread_pools::ThreadPool pool(10);
+		thread_pools::ThreadPool pool(10);
 		
 		while(true) {
 
@@ -311,7 +315,6 @@ void accept_client_connection(){
 			
 			if (newsockfd < 0 || errno != 0) {
 				cout << KRED << error("failed on accept") << KNRM << endl;
-				exit(1);
 				break;
 			}
 
@@ -322,11 +325,11 @@ void accept_client_connection(){
 				.sockfd = newsockfd,
 				.remote_address = get_remote_end_socket_ip(cli_addr),
 			};
-			// auto task = ([cn](){
+			auto task = ([cn](){
 				dbg(concat("handeling client connection : ", cn.remote_address));
 				handle_connection(cn);
-			// });
-			// pool.enqueue(task);
+			});
+			pool.enqueue(task);
 		}
 		
 		dbg("shutdown server socket");
@@ -348,7 +351,10 @@ int main() {
 	signal(SIGSEGV, sig_func); // sets a new signal function for SIGSEGV
 	// raise(SIGSEGV); // causes the signal function to be called
     cout << "Http/TCP Client in C++ : %s\n" << KGRN << concat("by : ", "Hussain Al Mutawa") << KNRM << endl;
-	accept_client_connection();
+	int retry=0;
+	while(++retry<100){
+		accept_client_connection();
+	}
 	if(errno!=0) error("network error");	
 
 	cout << "\nexiting ...\n" << endl;
