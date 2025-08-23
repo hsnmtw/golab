@@ -14,11 +14,18 @@
 #define HTTP_REQUEST_BUFFER_SIZE 2048
 #endif
 
-typedef struct HttpRequest {
+using namespace std;
+
+typedef struct {
+	int  sockfd;
+	string remote_address;
+} HttpConnection;
+
+typedef struct {
 	int method;
-	char* path;
-	char* query;
-	char* body;
+	string path;
+	string query;
+	string body;
 } HttpRequest;
 
 
@@ -32,27 +39,19 @@ void fill_http_request(HttpRequest* request, char* buffer) {
 	int col=1;
 	int j=0;
 
-	request->path  = (char*) malloc(518);
-	request->query = (char*) malloc(518);
-	request->body  = (char*) malloc(1024);
-
-	bzero(request->path, 518);
-	bzero(request->query, 518);
-	bzero(request->body, 1024);
-
-	for(int i=0;i<HTTP_REQUEST_BUFFER_SIZE || buffer[i]=='\0';++i) {
+	for(int i=0;i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\0';++i) {
 		if(row == 1 && col>1 && buffer[i]==' ') {
 			j=1;
 			i++;
-			request->path[0] = '.';
-			while(i<HTTP_REQUEST_BUFFER_SIZE && j<518 && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] !='?' && buffer[i] != '\0') {
-				request->path[j++] = buffer[i++];
+			request->path = ".";
+			while(i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] !='?' && buffer[i] != '\0') {
+				request->path += buffer[i++];
 			}
 			j=0;
 			if(buffer[i]=='?') {
 				i++;
 				while(i<HTTP_REQUEST_BUFFER_SIZE && buffer[i]!='\n' && buffer[i] !=' ' && buffer[i] != '\0') {
-					request->query[j++] = buffer[i++];
+					request->query += buffer[i++];
 				}
 			}
 		}
@@ -63,7 +62,7 @@ void fill_http_request(HttpRequest* request, char* buffer) {
 				//everything else is the body
 				j=0;
 				while(buffer[i] != '\0' && i<HTTP_REQUEST_BUFFER_SIZE) {
-					request->body[j++] = buffer[i++];
+					request->body += buffer[i++];
 				}
 			}
 		}

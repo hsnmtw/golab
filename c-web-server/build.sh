@@ -1,6 +1,6 @@
-#cc main.c -Wextra -Wall -Wunused -O3 -Os -o ./bin/main
-rm -rf bin/main
-g++ src/*.cxx \
+rm -rf bin/app
+export LD_PRELOAD=../../libharu/src/libhpdf.so.2.4
+g++ src/main.cxx \
  -std=c++17 \
  -ffast-math \
  -Wall \
@@ -16,21 +16,16 @@ g++ src/*.cxx \
  -Wno-unused-parameter \
  -Wno-unreachable-code \
  -Wunused \
- -O3 \
- -Os \
  -fvisibility-inlines-hidden \
- -fno-exceptions \
  -fno-rtti \
  -fPIC \
- -s \
- -g0 \
+ -g \
  -Wnon-virtual-dtor \
  -Wno-noexcept-type \
  -I ./../../libharu/include \
  -L./../../libharu/src \
  -l:libhpdf.so \
- -o ./bin/main \
- -fexceptions
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../libharu/src/
-bin/main
+ -o ./bin/app \
+ -fsanitize=address -static-libasan
+ 
+ bin/app

@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <signal.h> 
 
 
 #include "include/thread_pools.hxx"
@@ -26,8 +27,6 @@
 #include <format>
 
 #define BUFFER_CHUNK_SIZE 1024
-#define LONG_DATE_FORMAT "%Y-%m-%d %H:%M:%S"
-#define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 #define HTTP_PROTOCOL "HTTP/1.1"
 
 #ifndef HTTP_REQUEST_BUFFER_SIZE
@@ -38,45 +37,28 @@
 #define HTTP_RESPONSE_STATUS_CODE_404 "Not Found"
 #define HTTP_RESPONSE_STATUS_CODE_500 "Internal Server Error"
 #define HTTP_RESPONSE_STATUS_CODE_306 "(Unused)"
-#define HTTP_DEFAULT_HEADERS "Transfer-Encoding: chunked\n"                \
-							 "Server: C Web Server By Hussain Al Mutawa\n"
-
-/*
 #define HTTP_DEFAULT_HEADERS "Access-Control-Allow-Origin: *\n"            \
 							 "Transfer-Encoding: chunked\n"                \
-							 "Server: C Web Server By Hussain Al Mutawa\n" \
+							 "Server: C/CXX Web Server By Hussain Al Mutawa\n" \
 							 "Vary: Cookie, Accept-Encoding\n"             \
 							 "X-Powered-By: C99\n"                         \
 							 "X-Content-Type-Options: nosniff\n"           \
 							 "x-frame-options: SAMEORIGIN\n"
-*/
 #define NEW_LINE "\n"
 #define HTTP_METHOD_GET  0
 #define HTTP_METHOD_POST 1
 
 
 static const char* error(char const* message) {
-	char* e = (char*) malloc(1000);
+	char* e = new char[1000];
 	sprintf(e,"[ERROR]: %s [%d] %s", message, errno, strerror(errno));
 	//exit(1);
 	return e;
 }
 
-const char* get_filename_ext(char* filename) {
-    char* dot = strrchr(filename, '.');
-    if(!dot || dot == filename) { return ""; }
-    return dot + 1;
-}
-
-static bool streq(char const* a, char const* b) {
-	return 0 == strcmp(a,b);
-}
-
- 
-
-const char* get_content_type(char* path) {
-	if (path == NULL || strlen(path) == 0) { return ""; }
-	const char* ext = get_filename_ext(path);
+const string get_content_type(string path) {
+	if (path.length() == 0) { return ""; }
+	string ext = get_filename_ext(path);
 
 	if(streq(ext, "md"   )) { return "text/markdown"; }	
 	if(streq(ext, "png"  )  
@@ -120,7 +102,7 @@ const char* get_content_type(char* path) {
 	return "text/plain";
 }
 
-const char* get_status_code(int status) {
+const string get_status_code(int status) {
 	switch (status)
 	{
 	case 200: return HTTP_RESPONSE_STATUS_CODE_200;
@@ -133,205 +115,242 @@ const char* get_status_code(int status) {
 
 
 int write_to_socket(int sockfd, char const* contents, bool is_chuncked = false) {
-	int len = strlen(contents);
-	if(!is_chuncked) {
-		return write(sockfd, contents, len);
-	}
-	auto header = concat(int_to_hex(len), "\r\n");
-	int n = write(sockfd, header,strlen(header));
-	n += write(sockfd, contents, len);
-	n += write(sockfd,"\r\n",2);
-	return n;
+		int len = strlen(contents);
+		if(!is_chuncked) {
+			return write(sockfd, contents, len);
+		}
+		auto header = concat(int_to_hex(len), "\r\n");
+		int n = write(sockfd, header.c_str(),header.length());
+		n += write(sockfd, contents, len);
+		n += write(sockfd,"\r\n",2);
+		return n;
+
 }
 
 
-int write_response_headers(int sockfd, int status, char* path) {
-	int n = 0;
-	printf("%s\n",path);
-	n += write_to_socket(sockfd, HTTP_PROTOCOL);
-	n += write_to_socket(sockfd, " 200 ");
-	n += write_to_socket(sockfd, get_status_code(status));
-	n += write_to_socket(sockfd, NEW_LINE);
-	n += write_to_socket(sockfd, "Content-Type: ");
-	n += write_to_socket(sockfd, get_content_type(path));
-	n += write_to_socket(sockfd, NEW_LINE);	
-	// n += write_to_socket(sockfd, "Content-Length: ");
-	// n += write_to_socket(sockfd, "0");
-	// n += write_to_socket(sockfd, NEW_LINE);
-	n += write_to_socket(sockfd, "Date: ");
-	n += write_to_socket(sockfd, now(LONG_DATE_FORMAT"\n"));
-	n += write_to_socket(sockfd, "Last-Modified: ");
-	n += write_to_socket(sockfd, now(LONG_DATE_FORMAT"\n"));	
-	//write_to_socket(sockfd, "Content-Length: 445\n");	
-	n += write_to_socket(sockfd, HTTP_DEFAULT_HEADERS );
-	n += write_to_socket(sockfd, NEW_LINE);
-	return n;
+int write_response_headers(int sockfd, int status, string path) {
+
+		int n = 0;
+
+		n += write_to_socket(sockfd, HTTP_PROTOCOL);
+		n += write_to_socket(sockfd, " 200 ");
+		n += write_to_socket(sockfd, get_status_code(status).c_str());
+		n += write_to_socket(sockfd, NEW_LINE);
+		n += write_to_socket(sockfd, "Content-Type: ");
+		n += write_to_socket(sockfd, get_content_type(path).c_str());
+		n += write_to_socket(sockfd, NEW_LINE);	
+		// n += write_to_socket(sockfd, "Content-Length: ");
+		// n += write_to_socket(sockfd, "0");
+		// n += write_to_socket(sockfd, NEW_LINE);
+		n += write_to_socket(sockfd, "Date: ");
+		n += write_to_socket(sockfd, now(LONG_DATE_FORMAT"\n").c_str());
+		n += write_to_socket(sockfd, "Last-Modified: ");
+		n += write_to_socket(sockfd, now(LONG_DATE_FORMAT"\n").c_str());	
+		//write_to_socket(sockfd, "Content-Length: 445\n");	
+		n += write_to_socket(sockfd, HTTP_DEFAULT_HEADERS );
+		n += write_to_socket(sockfd, NEW_LINE);
+		return n;
 }
 
 
 
-int serve_static_file(int sockfd, char* path) {
-	errno = 0;
-	printf("serving static file : [%s]\n", path);
-	int n = 0;
-	FILE *fptr = fopen(path, "rb");
+int serve_static_file(int sockfd, string path) {
+		errno = 0;
+		inf(concat("serving static file : ", path));
+		int n = 0;
+		FILE *fptr = fopen(path.c_str(), "rb");
 
-	if(fptr == NULL || errno != 0) {
+		if(fptr == NULL || errno != 0) {
 
-		write_to_socket(sockfd,error("failed to read file ... "));
-		return errno;
-	}
+			write_to_socket(sockfd,error("failed to read file ... "));
+			return errno;
+		}
 
-	{
-		char buffer[BUFFER_CHUNK_SIZE];
-        while (!feof(fptr))
-        {
-			bzero(buffer, BUFFER_CHUNK_SIZE);
-			int bytes = fread(buffer,1,BUFFER_CHUNK_SIZE,fptr);
-			if(bytes>0)
-				bytes = write_to_socket(sockfd,buffer,true);
-        }
-	}
-	fclose(fptr);
-	return n;
+		{
+			char buffer[BUFFER_CHUNK_SIZE];
+	        while (!feof(fptr))
+	        {
+				bzero(buffer, BUFFER_CHUNK_SIZE);
+				int bytes = fread(buffer,1,BUFFER_CHUNK_SIZE,fptr);
+				if(bytes>0)
+					bytes = write_to_socket(sockfd,buffer,true);
+	        }
+		}
+		fclose(fptr);
+		return n;
 }
 
-typedef struct HttpConnection {
-	int  sockfd;
-	char* remote_address;
-} HttpConnection;
+void handle_connection(HttpConnection cn) {
+	// try{
+		int n = 0;
+		int sockfd = cn.sockfd;
 
+		HttpRequest request = {
+			.method = -1,
+			.path   = "",
+			.query  = "",
+			.body   = "",
+		};
 
-void handle_connection(HttpConnection* cn) {
-	int sockfd = cn->sockfd;
-	char* buffer = (char*) malloc(HTTP_REQUEST_BUFFER_SIZE);
-	//printf("got here ........ %d\n",sockfd);
-	bzero(buffer,HTTP_REQUEST_BUFFER_SIZE);
-	int n = read(sockfd,buffer,HTTP_REQUEST_BUFFER_SIZE);
-	if (n < 0) {
-		error("failed reading from socket");
-	}
+		// while(0 < (n = read(sockfd,buffer,1))) {
+		dbg("receiving client request char by char");
+		char buffer[HTTP_REQUEST_BUFFER_SIZE] = {0};
+		if(0 > (n = read(sockfd,buffer,sizeof(buffer)-1))) {
+			dbg("empty request");
+			shutdown(sockfd, SHUT_RDWR);
+			close(sockfd);
+			inf("rejected empty request : ''");
+			return;
+		}
 
-	HttpRequest* request = (HttpRequest*) malloc(sizeof(HttpRequest));
-	fill_http_request(request, buffer);
-	printf("Http Request [From = '%s'] [Path   = '%s']\n", cn->remote_address , request->path);
-	// printf("Http Request [Query  = '%s']\n", request->query);
-	// printf("Http Request [Method = '%d']\n", request->method);
-	// printf("Http Request [Body   = '%s']\n", request->body);
+		dbg(buffer);
+		fill_http_request(&request, buffer);
+		dbg(concat("m: ",request.method == 0 ? "GET" : "POST"));
+		dbg(concat("p: ",request.path));
+		dbg(concat("q: ",request.query));
+		dbg(concat("b: ",request.body));
 
-	//printf("Here is the message: %s\n",buffer);
-	printf("[%s] connected\n", cn->remote_address);
+		dbg("check if serving home page");
+		if(streq(request.path,"./") || streq(request.path,"./home")) {
+			request.path = "./assets/html/home.html";
+		}
 
-	if(streq(request->path,"./") || streq(request->path,"./home")) {
-		strcpy(request->path, "./assets/html/home.html");
-	}
+		dbg("check if favicon or chrome well-known");
+		if(streq(request.path,"./favicon.ico") || streq(request.path, "./.well-known/appspecific/com.chrome.devtools.json")) {
+			n += write_response_headers(sockfd, 404, request.path);
 
+		} else if(streq(request.path,"./pdf.pdf")) {
+			n += write_response_headers(sockfd, 200, request.path);
+			generate_pdf([sockfd](char* _buffer, int _bytes){
+				(void)write_to_socket(sockfd,_buffer,true);
+			});
+		} else {
+			n += write_response_headers(sockfd, 200, request.path);
+			n += serve_static_file(sockfd,request.path);
+		}
 
-	if(streq(request->path,"./favicon.ico") || streq(request->path, "./.well-known/appspecific/com.chrome.devtools.json")) {
-		n += write_response_headers(sockfd, 404, request->path);
+		if (n < 0) {
+			cout << KRED << error("failed writing to socket") << KNRM << endl;
+		}
 
-	} else if(streq(request->path,"./pdf.pdf")) {
-		n += write_response_headers(sockfd, 200, request->path);
-		generate_pdf([sockfd](char* _buffer, int _bytes){			
-			(void)write_to_socket(sockfd,_buffer,true);
-		});
-	} else {
-		n += write_response_headers(sockfd, 200, request->path);
-		n += serve_static_file(sockfd,request->path);
-	}
+		// close(sockfd);
+		dbg("sending zero length frame to denote terminating connection");
+		write_to_socket(sockfd,"0\r\n\r\n");
+		dbg("client socket shutdown");
+		shutdown(sockfd, SHUT_RDWR);
+		dbg("close client socket connection");
+		close(sockfd);
 
-	if (n < 0) {
-		error("failed writing to socket");
-	}
-
-	// close(sockfd);
-	
-	write_to_socket(sockfd,"0\r\n\r\n");
-	shutdown(sockfd, SHUT_RDWR);
-	close(sockfd);
-
-	try{
-		free(cn);
-		free(request->path);
-		free(request->query);
-		free(request->body);
-		free(request);
-		free(buffer);
-	}catch(int err){
-		cout << "got some error while freeing memory" << err << endl;
-	}
+	// } catch (int err) {
+	// 	cout << KRED << "[ERROR] while handeling client connection : " << KCYN << err << KNRM << endl;
+	// }
 }
 
-char* get_remote_end_socket_ip(struct sockaddr_in cli_addr) {
+string get_remote_end_socket_ip(struct sockaddr_in cli_addr) {
 	struct in_addr ip_address = ((struct sockaddr_in *) &cli_addr)->sin_addr;
-	char * ip = (char *) malloc(INET_ADDRSTRLEN);
+	char* ip = new char[INET_ADDRSTRLEN];
 	inet_ntop( AF_INET, &ip_address, ip, INET_ADDRSTRLEN );
-	return ip;
+	string s;
+	s.assign(ip);
+	return s;
 }
+
+
 
 void accept_client_connection(){
-	printf("trying to connect ...\n");
-	socklen_t clilen;
-	struct sockaddr_in serv_addr, cli_addr;
-	int port = HTTP_RORT_NUMBER;
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0); //AF_INET: IPv4
 
+		printf("trying to connect ...\n");
+		socklen_t clilen;
+		struct sockaddr_in serv_addr, cli_addr;
+		int port = HTTP_RORT_NUMBER;
+		dbg("initiating server socket");
+		int sockfd = socket(AF_INET, SOCK_STREAM, 0); //AF_INET: IPv4
 
-	if (sockfd < 0 || errno != 0) {
-        error("failed opening socket");
-	}
+		if (sockfd < 0 || errno != 0) {
+			cout << KRED << error("failed opening socket") << KNRM << endl;
+		}
 
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(port);
+		bzero((char *) &serv_addr, sizeof(serv_addr));
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_addr.s_addr = INADDR_ANY;
+		serv_addr.sin_port = htons(port);
+		
+		const linger _linger = {
+			.l_onoff = 1,
+			.l_linger = 0,
+		};
+		dbg("set server socket option linger to 1");
+		setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
+
+		dbg("binding server socket to ip address and port");
+		if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0 || errno != 0) {
+			if(errno==98) {
+				printf("\n\n%s[ERROR]%s address is already in use, %sterminating%s ...\n",KRED,KYEL,KCYN,KNRM);
+				dbg("exit(1)");
+				exit(1);
+			}
+			
+			cout << KRED << error("ERROR on binding") << KNRM << endl;
+		}
+
+		// Create a thread pool with 4 threads
+		//thread_pools::ThreadPool pool(10);
+		
+		while(true) {
+
+			inf(" waiting for connection ");
+			dbg("listening to clients");
+			if(listen(sockfd,100) < 0 || errno != 0) {
+				cout << KRED << error("failed to listen, ... \n") << KNRM << endl;
+				break;
+			}
+
+			clilen = sizeof(cli_addr);
+			dbg("accepting client connection");
+			int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+			
+			if (newsockfd < 0 || errno != 0) {
+				cout << KRED << error("failed on accept") << KNRM << endl;
+				exit(1);
+				break;
+			}
+
+			//pthread_t threadx;
+			//pthread_create(&threadx, NULL,handle_connection, cn);	
+			dbg("getting client ip address and assigning it an http connection with socket interface identifier");
+			HttpConnection cn = {  
+				.sockfd = newsockfd,
+				.remote_address = get_remote_end_socket_ip(cli_addr),
+			};
+			// auto task = ([cn](){
+				dbg(concat("handeling client connection : ", cn.remote_address));
+				handle_connection(cn);
+			// });
+			// pool.enqueue(task);
+		}
+		
+		dbg("shutdown server socket");
+		shutdown(sockfd, SHUT_RDWR);
+		dbg("close server socket");
+		close(sockfd);
 	
-	// const linger _linger = {
-	// 	.l_onoff = 1,
-	// 	.l_linger = 0,
-	// };
-	// setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
-
-	int on = 1;
-	setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &on, sizeof(on)); // or sizeof(on) in C
-
-
-	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0 || errno != 0) {
-        error("ERROR on binding");
-	}
-
-	// Create a thread pool with 4 threads
-    thread_pools::ThreadPool pool(10);
-	
-	while(true) {
-		printf("--------------------------------------------------------[listening on port %d] \n", port);		
-		listen(sockfd,5);
-		clilen = sizeof(cli_addr);
-		int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-		if (newsockfd < 0) 
-		  error("failed on accept");
-
-		//pthread_t threadx;
-		//pthread_create(&threadx, NULL,handle_connection, cn);	
-		HttpConnection* cn = (HttpConnection*) malloc(sizeof *cn);
-		cn->sockfd = newsockfd;
-		cn->remote_address = get_remote_end_socket_ip(cli_addr);
-		pool.enqueue([cn](){
-			handle_connection(cn);
-		});
-	}
-	
-	shutdown(sockfd, SHUT_RDWR);
-	close(sockfd);
 }
 
 
+void sig_func(int sig)
+{
+	cerr << KRED << "SIG FAULT" << KNRM << endl;
+    cerr.flush();
+	exit(1);
+}
+
 int main() {
-	cout << int_to_hex(10) << endl;
-	// printf("%s\n", get_default_response_headers());
-	// return 0;
-    printf("Http/TCP Client in C++ : %s\n", concat("by : ", "Hussain Al Mutawa"));
+	signal(SIGSEGV, sig_func); // sets a new signal function for SIGSEGV
+	// raise(SIGSEGV); // causes the signal function to be called
+    cout << "Http/TCP Client in C++ : %s\n" << KGRN << concat("by : ", "Hussain Al Mutawa") << KNRM << endl;
 	accept_client_connection();
 	if(errno!=0) error("network error");	
+
+	cout << "\nexiting ...\n" << endl;
     return 0;
 }

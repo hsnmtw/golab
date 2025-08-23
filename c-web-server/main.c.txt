@@ -297,7 +297,7 @@ void handle_connection(HttpConnection* cn) {
 	// printf("Http Request [Body   = '%s']\n", request->body);
 
 	//printf("Here is the message: %s\n",buffer);
-	printf("[%s] connected\n", cn->remote_address);
+	printf("[%s] cntd\n", cn->remote_address);
 	char* path = (char*) malloc(518);
 	strcpy(path, request->path);
 
