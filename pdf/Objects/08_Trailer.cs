@@ -22,6 +22,6 @@ public struct Trailer
 
     public readonly byte[] Bytes()
     {
-        return Encoding.ASCII.GetBytes(ToString());
+        return Encoding.UTF8.GetBytes(ToString());
     }
 }

@@ -17,12 +17,12 @@ public struct Pages
            /Kids {Kids}
            /Count {Count}
         >>
-        endobj{'\r'}
+        endobj{'\r'}{'\n'}
         """;
     }
 
     public readonly byte[] Bytes()
     {
-        return Encoding.ASCII.GetBytes(ToString());
+        return Encoding.UTF8.GetBytes(ToString());
     }
 }

@@ -5,19 +5,20 @@ namespace pdf.Objects;
 public struct Procedure
 {
     public string Reference { get; set; }
+    public string Instruction { get; set; }
 
     public override readonly string ToString()
     {
         return
         $"""
         {Reference} obj
-        [/PDF]
-        endobj{'\r'}
+        [{Instruction}]
+        endobj{'\r'}{'\n'}
         """;
     }
 
     public readonly byte[] Bytes()
     {
-        return Encoding.ASCII.GetBytes(ToString());
+        return Encoding.UTF8.GetBytes(ToString());
     }
 }

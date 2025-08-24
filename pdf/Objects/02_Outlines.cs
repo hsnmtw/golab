@@ -15,12 +15,12 @@ public struct Outlines
         << /Type /{nameof(Outlines)}
            /Count {Count}
         >>
-        endobj{'\r'}
+        endobj{'\r'}{'\n'}
         """;
     }
 
     public readonly byte[] Bytes()
     {
-        return Encoding.ASCII.GetBytes(ToString());
+        return Encoding.UTF8.GetBytes(ToString());
     }
 }

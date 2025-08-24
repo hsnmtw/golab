@@ -6,6 +6,7 @@ public struct Contents
 {
     public string Reference { get; set; }
     public string Length { get; set; }
+    public string StreamData { get; set; }
 
     public override readonly string ToString()
     {
@@ -14,13 +15,16 @@ public struct Contents
         {Reference} obj
         << /Length {Length} >>
         stream
+        BT
+        {StreamData}
+        ET
         endstream
-        endobj{'\r'}
+        endobj{'\r'}{'\n'}
         """;
     }
 
     public readonly byte[] Bytes()
     {
-        return Encoding.ASCII.GetBytes(ToString());
+        return Encoding.UTF8.GetBytes(ToString());
     }
 }

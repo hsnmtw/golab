@@ -1,41 +1,63 @@
-%PDF-1.7%нцςп1 0 obj
+%PDF-1.7
+%нцςп
+1 0 obj
 << /Type /Catalog
    /Outlines 2 0 R
    /Pages 3 0 R
 >>
-endobj2 0 obj
+endobj
+2 0 obj
 << /Type /Outlines
    /Count 0
 >>
-endobj3 0 obj
+endobj
+3 0 obj
 << /Type /Pages
    /Kids [4 0 R]
    /Count 1
 >>
-endobj4 0 obj
+endobj
+4 0 obj
 << /Type /Page
    /Parent 3 0 R
-   /MediaBox [0 0 300 300]
+   /MediaBox [0 0 200 100]
    /Contents 5 0 R
    /Resources << /ProcSet 6 0 R >>
 >>
-endobj5 0 obj
+endobj
+5 0 obj
 << /Length 0 >>
 stream
+BT
+/F1 24 Tf
+10 10 Td
+(Hello World) Tj
+ET
 endstream
-endobj6 0 obj
-[/PDF]
-endobjxref
-0 7
+endobj
+6 0 obj
+[/PDF /Text]
+endobj
+7 0 obj
+<<  /Type     Font
+    /Subtype  Type1
+    /Name     F1
+    /BaseFont Helvetica
+    /Encoding MacRomanEncoding
+>>
+endobjxref
+0 8
 0000000000 65535 f
-0000000019 00000 n
-0000000095 00000 n
-0000000148 00000 n
-0000000216 00000 n
-0000000354 00000 n
-0000000406 00000 ntrailer
-<<  /Size 7
+0000000021 00000 n
+0000000098 00000 n
+0000000152 00000 n
+0000000221 00000 n
+0000000360 00000 n
+0000000460 00000 n
+0000000491 00000 n
+trailer
+<<  /Size 8
     /Root 1 0 R 
 >>
 startxref
-430%%EOF
+626%%EOF
