@@ -1,50 +1,41 @@
 %PDF-1.7%нцςп1 0 obj
-    <<
-        /Type /Catalog 
-        /Pages 2 0 R
-        /Lang(en-US) 
-        /StructTreeRoot 10 0 R
-        /MarkInfo
-            <<
-                /Marked true
-            >>
-    >>
+<< /Type /Catalog
+   /Outlines 2 0 R
+   /Pages 3 0 R
+>>
 endobj2 0 obj
-    <<
-        /Type Outlines
-        /Count 0
-    >>
+<< /Type /Outlines
+   /Count 0
+>>
 endobj3 0 obj
-    <<
-        /Type Pages
-        /Kids [4 0 R]
-        /Count 1
-    >>
+<< /Type /Pages
+   /Kids [4 0 R]
+   /Count 1
+>>
 endobj4 0 obj
-    <<
-        /Type Page
-        /Parent 3 0 R
-        /MediaBox [0 0 612 792]
-        /Contents 5 0 R
-    >>
+<< /Type /Page
+   /Parent 3 0 R
+   /MediaBox [0 0 300 300]
+   /Contents 5 0 R
+   /Resources << /ProcSet 6 0 R >>
+>>
 endobj5 0 obj
-    <<
-        /Length 0
-    >>
-    stream
-    endstream
+<< /Length 0 >>
+stream
+endstream
 endobj6 0 obj
-    [/PDF]
+[/PDF]
 endobjxref
-0 6
+0 7
 0000000000 65535 f
 0000000019 00000 n
-0000000223 00000 n
-0000000292 00000 n
-0000000380 00000 n
-0000000506 00000 n
-0000000578 00000 ntrailer
-    <<
-        /Size 6
-        /Root 1 0 R
-    >>startxref604%%EOF
+0000000095 00000 n
+0000000148 00000 n
+0000000216 00000 n
+0000000354 00000 n
+0000000406 00000 ntrailer
+<<  /Size 7
+    /Root 1 0 R 
+>>
+startxref
+430%%EOF
