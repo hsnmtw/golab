@@ -21,12 +21,10 @@ public struct Page
            /Contents {Contents}
            /Resources {Resources}
         >>
-        endobj{'\r'}{'\n'}
+        endobj
+        
         """;
     }
 
-    public readonly byte[] Bytes()
-    {
-        return Encoding.UTF8.GetBytes(ToString());
-    }
+    
 }

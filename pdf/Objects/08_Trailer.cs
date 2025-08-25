@@ -6,7 +6,9 @@ public struct Trailer
 {
     public string StartXref { get; set; }
     public string Size { get; set; }
+    public string Info { get; set; }
     public string Root { get; set; }
+    public Guid ID { get; set; }
     public override readonly string ToString()
     {
         return
@@ -14,14 +16,13 @@ public struct Trailer
         trailer
         <<  /Size {Size}
             /Root {Root} 
+            /Info {Info} 
+            /ID   [<{ID.ToString("n").ToUpper()}>]
         >>
         startxref
         {StartXref}
         """;
     }
 
-    public readonly byte[] Bytes()
-    {
-        return Encoding.UTF8.GetBytes(ToString());
-    }
+    
 }

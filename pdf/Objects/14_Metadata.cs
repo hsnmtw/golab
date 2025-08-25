@@ -2,21 +2,22 @@ using System.Text;
 
 namespace pdf.Objects;
 
-public struct Outlines
+public struct Metadata
 {
     public string Reference { get; set; }
-    public string Count { get; set; }
-
+    
     public override readonly string ToString()
     {
         return
         $"""
         {Reference} obj
-        << /Type /{nameof(Outlines)}
-           /Count {Count}
+        << /Type /{nameof(Metadata)}
+           /Length 0
         >>
         endobj
         
         """;
     }
+
+    
 }

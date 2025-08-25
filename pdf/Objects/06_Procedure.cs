@@ -13,12 +13,10 @@ public struct Procedure
         $"""
         {Reference} obj
         [{Instruction}]
-        endobj{'\r'}{'\n'}
+        endobj
+        
         """;
     }
 
-    public readonly byte[] Bytes()
-    {
-        return Encoding.UTF8.GetBytes(ToString());
-    }
+    
 }

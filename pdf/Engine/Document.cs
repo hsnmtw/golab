@@ -1,3 +1,4 @@
+using System.Text;
 using pdf.Objects;
 
 namespace pdf.Engine;
@@ -7,48 +8,155 @@ public class Document : IDisposable
     private readonly Stream _stream;
     private readonly Xref xref = new Xref() { Refrences = [] };
 
+    private int _nextRef = 1;
+    private string NextRef() => $"{_nextRef++} 0";
+
     public Document(Stream stream)
     {
         _stream = stream;
-        _stream.Write("%PDF-1.7\r\n"u8);
-        _stream.Write("%нцςп\r\n"u8);
-        xref.Refrences.Add("0000000000 65535 f");
-        xref.Add(_stream); _stream.Write(new Catalog { Reference = "1 0", Outlines = "2 0 R", Pages = "3 0 R" }.Bytes());
-        xref.Add(_stream); _stream.Write(new Outlines { Reference = "2 0", Count = "0" }.Bytes());
-    }
 
-    public void Page(float w, float h, string text)
-    {        
-        xref.Add(_stream); _stream.Write(new Pages { Reference = "3 0", Kids = "[4 0 R]", Count = "1" }.Bytes());
-        xref.Add(_stream); _stream.Write(new Page { Reference = "4 0", Parent = "3 0 R", MediaBox = $"[0 0 {w} {h}]", Contents = "5 0 R", Resources = "<< /ProcSet 6 0 R >>" }.Bytes());
-        xref.Add(_stream); _stream.Write(new Contents { Reference = "5 0", Length = "0", StreamData =
-        """
-        /F1 24 Tf
-        10 10 Td
-        (Hello World) Tj
-        """}.Bytes());
-        xref.Add(_stream); _stream.Write(new Procedure { Reference = "6 0", Instruction = "/PDF /Text" }.Bytes());
-        xref.Add(_stream); _stream.Write(new Font
+        float h = 160;
+        float w = 500;
+
+        var catalog = new Catalog
         {
-            Reference = "7 0",
+            Reference = NextRef(),
+        };
+
+        var outlines = new Outlines { Reference = NextRef(), Count = "0" };
+
+        
+
+        var pages = new Pages
+        {
+            Reference = NextRef(),
+        };
+
+        
+
+        var page1 = new Page
+        {
+            Reference = NextRef(),
+            Parent = $"{pages.Reference} R",
+            MediaBox = $"[0 0 {h} {h}]",
+        };
+
+        var page2 = new Page
+        {
+            Reference = NextRef(),
+            Parent = $"{pages.Reference} R",
+            MediaBox = $"[0 0 {w} {h}]",
+        };
+
+        var canvas1 = new Contents
+        {
+            Reference = NextRef(),
+            StreamData = $"""
+            BT
+                /F2 22 Tf
+                10 {h-30} Td
+                (This is the first line in Times Font) Tj
+            ET
+            BT
+                /F2 22 Tf
+                10 {h-70} Td
+                (This is the second line in Helvetica Font) Tj
+            ET
+            """
+        };
+
+        page1.Contents = $"{canvas1.Reference} R";
+
+        // var procedure1 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
+        
+
+        
+
+        var canvas2 = new Contents
+        {
+            Reference = NextRef(),
+            StreamData =
+            $"""
+            BT
+                /F1 22 Tf
+                10 {h-60} Td
+                (Testing having another page only) Tj
+            ET
+            """
+        };
+        page2.Contents = $"{canvas2.Reference} R";
+
+        var procedure2 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
+
+
+        var kids = new[] { page1 , page2 };
+        pages.Kids = $"[{string.Join(" ", kids.Select(p => $"{p.Reference} R"))}]";
+        pages.Count = kids.Length; 
+        
+        var f1 = new Font
+        {
+            Reference = NextRef(),
             Subtype = "Type1",
             Name = "F1",
-            BaseFont = "Helvetica",
-            Encoding = "MacRomanEncoding"
-        }.Bytes());
+            BaseFont = Font.STANDARD_14_FONTS[(int)StandardFonts.TimesRoman],
+            Encoding = "MacRomanEncoding", // StandardEncoding, BaseEncoding, MacRomanEncoding, MacExpertEncoding, or WinAnsiEncoding
+        };
+        var f2 = new Font
+        {
+            Reference = NextRef(),
+            Subtype = "Type1",
+            Name = "F2",
+            BaseFont = Font.STANDARD_14_FONTS[(int)StandardFonts.Helvetica],
+            Encoding = "MacRomanEncoding",
+        };
+
+        var info = new Info(){
+            Reference    = NextRef(),
+            Title        = "Example PDF Document",
+            Author       = "Hussain Al Mutawa",
+            Subject      = "Testing creating pdfs",
+            Keywords     = "re-inventing the wheel",
+            Creator      = "Coded by hand",
+            Producer     = "Some program",
+            CreationDate = DateTime.Now,
+            ModDate      = DateTime.Now,
+        };
+        var metadata = new Metadata() { Reference = NextRef() } ;
+
         
-    }
 
-    public void Close()
-    {
-        var startXref = _stream.Length + "";
-        _stream.Write(xref.Bytes());
-        _stream.Write("\r\n"u8);
-        _stream.Write(new Trailer() { Root = "1 0 R", Size = xref.Refrences.Count + "", StartXref = startXref }.Bytes());
+        page1.Resources = $"<< /ProcSet {procedure2.Reference} R /Font << /F1 {f1.Reference} R /F2 {f2.Reference} R >> >>";
+        page2.Resources = $"<< /ProcSet {procedure2.Reference} R /Font << /F1 {f1.Reference} R >> >>";
 
-        _stream.Write("%%EOF"u8);
 
-        //Dispose();
+        catalog.Outlines = outlines.Reference + " R";
+        catalog.Pages = pages.Reference + " R";
+        catalog.Metadata = metadata.Reference + " R";
+
+
+        _stream.Write("%PDF-1.4\r\n"u8);
+        _stream.Write("%нцςп\r\n"u8);
+        xref.Refrences.Add("0000000000 65535 f");
+
+        var elements = new object[]{
+            catalog,outlines,pages,page1,page2,canvas1,canvas2,procedure2,f1,f2,info,metadata
+        };
+        foreach (var el in elements)
+        {
+            xref.AddXrefPosition(_stream);
+            _stream.Write(Encoding.UTF8.GetBytes($"{el}"));
+        }
+        var trailer = new Trailer()
+        {
+            ID = Guid.NewGuid(),
+            Root = catalog.Reference + " R",
+            Info = info.Reference + " R",
+            Size = xref.Refrences.Count + "",
+            StartXref = _stream.Length + "",
+        };
+        _stream.Write(Encoding.UTF8.GetBytes($"{xref}"));
+        _stream.Write(Encoding.UTF8.GetBytes($"{trailer}"));
+        _stream.Write("\r\n%%EOF"u8);
     }
 
     public void Dispose()
@@ -59,6 +167,8 @@ public class Document : IDisposable
             _stream.Close();
         }
         _stream?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     ~Document() {

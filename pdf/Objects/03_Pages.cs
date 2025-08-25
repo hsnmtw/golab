@@ -6,7 +6,7 @@ public struct Pages
 {
     public string Reference { get; set; }
     public string Kids { get; set; }
-    public string Count { get; set; }
+    public int Count { get; set; }
 
     public override readonly string ToString()
     {
@@ -17,12 +17,10 @@ public struct Pages
            /Kids {Kids}
            /Count {Count}
         >>
-        endobj{'\r'}{'\n'}
+        endobj
+        
         """;
     }
 
-    public readonly byte[] Bytes()
-    {
-        return Encoding.UTF8.GetBytes(ToString());
-    }
+    
 }
