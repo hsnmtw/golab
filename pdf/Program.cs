@@ -1,7 +1,7 @@
 ﻿
 using System.Text;
-using pdf.Engine;
-using pdf.Objects;
 
-using var stream = File.Create("./testing/first.pdf");
-_ = new Document(stream);
+// reference      https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
+
+// ShapesExample.Run();
+UnicodeExample.Run();

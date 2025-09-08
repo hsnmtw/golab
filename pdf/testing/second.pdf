@@ -1,0 +1,67 @@
+%PDF-1.4
+%нцςп
+1 0 obj
+<< /Type /Catalog /Outlines 2 0 R /Pages 3 0 R >>
+endobj
+2 0 obj
+<< /Type Outlines /Count 0 >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+4 0 obj
+<< /Type /Page
+/Parent 3 0 R
+/MediaBox [ 0 0 612 792 ]
+/Contents 5 0 R
+/Resources << /ProcSet 6 0 R /Font << /F1 7 0 R >> >>
+>>
+endobj
+5 0 obj
+<<>>
+stream
+0.0 G                      % Set stroking colour to black
+1.0 1.0 0.0 rg             % Set nonstroking colour to yellow
+25 780 80 -120 re         % Construct rectangular path
+B                          % Fill and stroke path
+25 780 155 -150 re         % Construct rectangular path
+010 700 m                    % move to
+520 700 l                    % line
+%f                          % Fill path
+S                         % stroke only
+BT                         % Begin text object
+/F1 24 Tf                  % Set text font and size
+0 Tc                       % Set character spacing
+0 Tw                       % Set word spacing
+40 720 Td                  % Move text position
+1.0 0.0 0.0 rg             % Set nonstroking colour to red
+( Hello World ) Tj
+ET
+endstream
+endobj
+6 0 obj
+[ /PDF /Text ]
+endobj
+7 0 obj
+<< /Type /Font
+/Subtype /Type1
+/Name /F1
+/BaseFont /Helvetica
+/Encoding /MacRomanEncoding
+>>
+endobj
+xref
+0 7
+0000000000 65535 f
+0000000021 00000 n
+0000000089 00000 n
+0000000137 00000 n
+0000000197 00000 n
+0000000348 00000 n
+0000001168 00000 n
+0000001201 00000 n
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+1317
+%%EOF

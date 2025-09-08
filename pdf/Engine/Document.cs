@@ -15,8 +15,8 @@ public class Document : IDisposable
     {
         _stream = stream;
 
-        float h = 160;
-        float w = 500;
+        float h = 800;
+        // float w = 500;
 
         var catalog = new Catalog
         {
@@ -25,14 +25,10 @@ public class Document : IDisposable
 
         var outlines = new Outlines { Reference = NextRef(), Count = "0" };
 
-        
-
         var pages = new Pages
         {
             Reference = NextRef(),
         };
-
-        
 
         var page1 = new Page
         {
@@ -41,12 +37,12 @@ public class Document : IDisposable
             MediaBox = $"[0 0 {h} {h}]",
         };
 
-        var page2 = new Page
-        {
-            Reference = NextRef(),
-            Parent = $"{pages.Reference} R",
-            MediaBox = $"[0 0 {w} {h}]",
-        };
+        // var page2 = new Page
+        // {
+        //     Reference = NextRef(),
+        //     Parent = $"{pages.Reference} R",
+        //     MediaBox = $"[0 0 {w} {h}]",
+        // };
 
         var canvas1 = new Contents
         {
@@ -57,11 +53,6 @@ public class Document : IDisposable
                 10 {h-30} Td
                 (This is the first line in Times Font) Tj
             ET
-            BT
-                /F2 22 Tf
-                10 {h-70} Td
-                (This is the second line in Helvetica Font) Tj
-            ET
             """
         };
 
@@ -69,27 +60,25 @@ public class Document : IDisposable
 
         // var procedure1 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
         
+        // var canvas2 = new Contents
+        // {
+        //     Reference = NextRef(),
+        //     StreamData =
+        //     $"""
+        //     BT
+        //         /F1 22 Tf
+        //         10 {h-60} Td
+        //         (Testing having another page only) Tj
+        //     ET
+        //     """
+        // };
+        // page2.Contents = $"{canvas2.Reference} R";
 
-        
-
-        var canvas2 = new Contents
-        {
-            Reference = NextRef(),
-            StreamData =
-            $"""
-            BT
-                /F1 22 Tf
-                10 {h-60} Td
-                (Testing having another page only) Tj
-            ET
-            """
-        };
-        page2.Contents = $"{canvas2.Reference} R";
-
-        var procedure2 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
+        var procedure1 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
+        // var procedure2 = new Procedure { Reference = NextRef(), Instruction = "/PDF/Text" };
 
 
-        var kids = new[] { page1 , page2 };
+        var kids = new[] { page1 };
         pages.Kids = $"[{string.Join(" ", kids.Select(p => $"{p.Reference} R"))}]";
         pages.Count = kids.Length; 
         
@@ -125,8 +114,8 @@ public class Document : IDisposable
 
         
 
-        page1.Resources = $"<< /ProcSet {procedure2.Reference} R /Font << /F1 {f1.Reference} R /F2 {f2.Reference} R >> >>";
-        page2.Resources = $"<< /ProcSet {procedure2.Reference} R /Font << /F1 {f1.Reference} R >> >>";
+        page1.Resources = $"<< /ProcSet {procedure1.Reference} R /Font << /F1 {f1.Reference} R /F2 {f2.Reference} R >> >>";
+        // page2.Resources = $"<< /ProcSet {procedure2.Reference} R /Font << /F1 {f1.Reference} R >> >>";
 
 
         catalog.Outlines = outlines.Reference + " R";
@@ -139,7 +128,7 @@ public class Document : IDisposable
         xref.Refrences.Add("0000000000 65535 f");
 
         var elements = new object[]{
-            catalog,outlines,pages,page1,page2,canvas1,canvas2,procedure2,f1,f2,info,metadata
+            catalog,outlines,pages,page1,canvas1,procedure1,f1,f2,info,metadata
         };
         foreach (var el in elements)
         {
