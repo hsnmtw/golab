@@ -1,1 +1,4 @@
-g++ -o pdfmaker *.cxx
+rm *.exe
+g++ -o pdfmaker.exe *.cxx
+pdfmaker.exe
+cat test.pdf
