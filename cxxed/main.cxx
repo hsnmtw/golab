@@ -82,7 +82,7 @@ int main() {
     cursor += swrite(&fs, xref.c_str());
 
     swrite(&fs, "\ntrailer\n"
-                "<< /Size 8 /Root 1 0 R >>\n"
+                "<< /Size 7 /Root 1 0 R >>\n"
                 "startxref\n");
     sprintf(s,"%d\n",startxref);
     swrite(&fs, s);
