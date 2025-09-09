@@ -39,12 +39,12 @@
 #define HTTP_RESPONSE_STATUS_CODE_500 "Internal Server Error"
 #define HTTP_RESPONSE_STATUS_CODE_306 "(Unused)"
 #define HTTP_DEFAULT_HEADERS "Access-Control-Allow-Origin: *\n"            \
-							 "Transfer-Encoding: chunked\n"                \
 							 "Server: C/CXX Web Server By Hussain Al Mutawa\n" \
 							 "Vary: Cookie, Accept-Encoding\n"             \
 							 "X-Powered-By: C99\n"                         \
 							 "X-Content-Type-Options: nosniff\n"           \
 							 "x-frame-options: SAMEORIGIN\n"
+// "Transfer-Encoding: chunked\n"                
 #define NEW_LINE "\n"
 #define HTTP_METHOD_GET  0
 #define HTTP_METHOD_POST 1
@@ -113,15 +113,15 @@ const string get_status_code(int status) {
 
 
 
-int write_to_socket(int sockfd, char const* contents, bool is_chuncked = false) {
+int write_to_socket(int sockfd, char const* contents) {
 		int len = strlen(contents);
-		if(!is_chuncked) {
-			return write(sockfd, contents, len);
-		}
-		auto header = concat(int_to_hex(len), "\r\n");
-		int n = write(sockfd, header.c_str(),header.length());
-		n += write(sockfd, contents, len);
-		n += write(sockfd,"\r\n",2);
+		// if(!is_chuncked) {
+		// 	return write(sockfd, contents, len);
+		// }
+		// auto header = concat(int_to_hex(len), "\r\n");
+		// int n = write(sockfd, header.c_str(),header.length());
+		int n = write(sockfd, contents, len);
+		// n += write(sockfd,"\r\n",2);
 		return n;
 
 }
@@ -166,13 +166,13 @@ int serve_static_file(int sockfd, string path) {
 		}
 
 		{
-			char buffer[BUFFER_CHUNK_SIZE];
+			char buffer[BUFFER_CHUNK_SIZE+1];
 	        while (!feof(fptr))
 	        {
 				bzero(buffer, BUFFER_CHUNK_SIZE);
 				int bytes = fread(buffer,1,BUFFER_CHUNK_SIZE,fptr);
 				if(bytes>0)
-					bytes = write_to_socket(sockfd,buffer,true);
+					bytes = write_to_socket(sockfd,buffer);
 	        }
 		}
 		fclose(fptr);
@@ -221,14 +221,15 @@ void handle_connection(HttpConnection cn) {
 		} else if(streq(request.path,"./pdf.pdf")) {
 			n += write_response_headers(sockfd, 200, request.path);
 			try{
-				generate_pdf([sockfd](char* _buffer, int _bytes){
-					(void)write_to_socket(sockfd,_buffer,true);
+				n+= generate_pdf([sockfd](const char* _buffer, int _bytes){
+					write_to_socket(sockfd,_buffer);
 				});
 			}catch(int err){
 				errno=err;
 				cout << "err" << endl;
 			}
 		} else {
+			//n += write_to_socket(sockfd, "Expires: 2029-12-31 23:59:59 GMT\n");
 			n += write_response_headers(sockfd, 200, request.path);
 			n += serve_static_file(sockfd,request.path);
 		}
@@ -238,8 +239,8 @@ void handle_connection(HttpConnection cn) {
 		}
 
 		// close(sockfd);
-		dbg("sending zero length frame to denote terminating connection");
-		write_to_socket(sockfd,"0\r\n\r\n");
+		// dbg("sending zero length frame to denote terminating connection");
+		// write_to_socket(sockfd,"0\r\n\r\n");
 		dbg("client socket shutdown");
 		shutdown(sockfd, SHUT_RDWR);
 		dbg("close client socket connection");

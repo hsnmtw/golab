@@ -1,3 +1,5 @@
+#!/bin/sh
+
 rm -rf bin/app
 
 g++ src/main.cxx \
@@ -23,5 +25,5 @@ g++ src/main.cxx \
  -Wnon-virtual-dtor \
  -Wno-noexcept-type \
  -o ./bin/app \
- -fsanitize=address -static-libasan
+ -fsanitize=address,undefined -static-libasan
  bin/app
