@@ -8,9 +8,9 @@ if not exist ".\bin\" (
     mkdir .\bin
 )
 del %APP%
+::-mwindows                
 %CXX% .\src\*.*xx        ^
 -Wall                    ^
--mwindows                ^
 -Wextra                  ^
 -Wanalyzer-out-of-bounds ^
 -Waddress                ^
