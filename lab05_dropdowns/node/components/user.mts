@@ -1,8 +1,8 @@
-function onSubmitLogin(target){
+function onSubmitLogin(){
     console.log("something...");
 }
 
-function login(target){
+function login(target : Element | HTMLElement){
     if(!target) return
     const html = `
     <div class="grid-n" style="--columns:2">
@@ -12,6 +12,6 @@ function login(target){
     </div>
     `
     target.innerHTML = html
-    target.querySelector('button.primary').addEventListener("click",_=>onSubmitLogin(target))
+    target.querySelector<HTMLButtonElement>('button.primary')!.addEventListener("click",_=>onSubmitLogin())
 }
 
