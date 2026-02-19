@@ -1,0 +1,164 @@
+--- 1) DATABASE
+
+
+CREATE DATABASE [TAWFEEQ] 
+    ON (NAME = N'TAWFEEQ',     FILENAME = N'd:\DATA\TAWFEEQ.mdf',     SIZE = 1024MB, FILEGROWTH = 256MB)
+LOG ON (NAME = N'TAWFEEQ_log', FILENAME = N'd:\DATA\TAWFEEQ_log.ldf', SIZE = 512MB,  FILEGROWTH = 125MB);
+GO
+
+
+--- 2) LOGIN
+
+CREATE LOGIN [U1] 
+WITH PASSWORD     = N'123456', 
+DEFAULT_DATABASE  = [TAWFEEQ], 
+DEFAULT_LANGUAGE  = [us_english], 
+CHECK_EXPIRATION  = OFF, 
+CHECK_POLICY      = OFF;
+GO
+
+
+--- 3) USER
+
+CREATE USER U1
+FOR LOGIN U1;
+GO
+
+ALTER AUTHORIZATION 
+ON DATABASE::TAWFEEQ TO U1;
+GO
+
+
+
+ALTER LOGIN U1 ENABLE;
+GO
+
+
+EXEC sp_addrolemember N'db_datareader', N'U1';
+GO
+
+GRANT SELECT ON SCHEMA::[dbo] TO U1;
+GO
+
+GRANT VIEW ANY DATABASE TO U1;
+GO
+
+ALTER AUTHORIZATION ON DATABASE::TAWFEEQ TO U1;
+GO
+
+
+ALTER ROLE db_owner ADD MEMBER U1;
+GO
+
+
+EXECUTE xp_instance_regwrite N'HKEY_LOCAL_MACHINE',
+    N'Software\Microsoft\MSSQLServer\MSSQLServer',
+    N'LoginMode', REG_DWORD, 2;
+GO
+
+-- 4) TEST
+
+cmd> sqlcmd -S .\sqlexpress -U U1 -P 123456
+1>
+
+
+--5) BUILD TABLES
+
+CREATE TABLE T_PERSON (
+    [Id]                  Integer            NOT NULL PRIMARY KEY IDENTITY,
+    [Name]                VARCHAR(100)       ,
+    [Age]                 Integer
+);
+
+
+CREATE VIEW V_CHILDREN AS
+   SELECT * FROM T_PERSON WHERE AGE < 20;
+
+
+CREATE VIEW V_ADULT AS
+   SELECT * FROM T_PERSON WHERE AGE >= 20 AND Age <= 40;
+
+
+------------------------------------------------------------------------
+
+dotnet new console
+
+dotnet add package Microsoft.Data.SqlClient
+
+
+------------------------------------------------------------------------
+
+
+using System.Data.Common;
+using Microsoft.Data.SqlClient;
+
+const string CONNECTION_STRING = "Server=.\\sqlexpress;database=TAWFEEQ;User=U1;Password=123456;Trust Server Certificate=True";
+
+DbConnection cn = new SqlConnection();
+cn.ConnectionString = CONNECTION_STRING;
+cn.Open();
+
+DbCommand cmd = cn.CreateCommand();
+cmd.CommandText = "INSERT INTO [T_PERSON] ([Name],[Age]) VALUES (@1,@2)";
+cmd.Parameters.Add(new SqlParameter("@1","Person 2"));
+cmd.Parameters.Add(new SqlParameter("@2",10));
+cmd.ExecuteNonQuery();
+
+
+cn.Close();
+
+
+System.Console.WriteLine("DONE ....");
+
+
+
+جوالي خلص شحن و انا كنت اكلم نفسي
+بعدك معي؟
+
+hي
+اي
+
+
+طيب احنا كذا خلصنا موضوع تجهيز سيرفر داتابيس sql server
+و شبكناه بتطبيق بسيط
+
+الفرق بينه و بين 
+sqlite 
+مو ذاك الزود - التجهيزات الاولية ارتحت منها
+
+اللي حددتها
+
+ولا الاثنين طريقتهم واحدة
+
+تبي نسوي تقرير بسيط ؟
+
+اي
+
+طيب للتقرير نحتاج مكتبة تطبيقات Library 
+عندنا خيارين
+1. SkiaSharp  [https://github.com/mono/SkiaSharp]
+2. QuestPdf   [https://www.questpdf.com/]
+
+الخيار الاول اسهل نوعا ما لكنه قليل الامكانيات
+الخيار الثاني جدا عملي و يدعم العربي
+
+تمام
+
+<PackageReference Include="QuestPDF" Version="2024.7.3" />
+
+وين جوالك ؟
+
+
+Column
+1
+2
+3
+4
+5
+Row
+1 2 3 4 5
+
+
+
+
+
